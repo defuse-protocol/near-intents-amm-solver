@@ -55,13 +55,7 @@ export interface IQuoteResponseData {
     signature: string;
     public_key: string;
   };
-  quote_input?: {
-    defuse_asset_identifier_in: string;
-    defuse_asset_identifier_out: string;
-    exact_amount_in?: string;
-    exact_amount_out?: string;
-  };
-  quote_hash?: string;
+  other_quote_hashes?: string[];
 }
 
 export interface ISubscription {
