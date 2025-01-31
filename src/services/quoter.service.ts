@@ -58,7 +58,7 @@ export class QuoterService {
       return;
     }
     const reserveOut = currentState.reserves[params.defuse_asset_identifier_out];
-    if (!reserveIn) {
+    if (!reserveOut) {
       logger.error(`Reserve for token ${params.defuse_asset_identifier_out} not found`);
       return;
     }
