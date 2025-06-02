@@ -90,6 +90,7 @@ export class QuoterService {
     const quoteDeadlineMs = params.min_deadline_ms + quoteDeadlineExtraMs;
     const standard = SignStandardEnum.nep413;
     const message: IMessage = {
+      // TODO: use solvers.near sub-account as signer_id
       signer_id: this.nearService.getAccountId(),
       deadline: new Date(Date.now() + quoteDeadlineMs).toISOString(),
       intents: [
