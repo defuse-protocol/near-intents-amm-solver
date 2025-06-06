@@ -6,14 +6,14 @@ export const nearNetworkId = (process.env.NEAR_NETWORK_ID as NearChainId) || Nea
 export const nearDefaultConnectionConfigs = {
   [NearChainId.MAINNET]: {
     networkId: NearChainId.MAINNET,
-    nodeUrl: 'https://rpc.mainnet.near.org',
+    nodeUrl: 'https://near.lava.build',
     walletUrl: 'https://wallet.mainnet.near.org',
     helperUrl: 'https://helper.mainnet.near.org',
     keyStore: new keyStores.InMemoryKeyStore(),
   } as INearConnectionConfig,
   [NearChainId.TESTNET]: {
     networkId: NearChainId.TESTNET,
-    nodeUrl: 'https://rpc.testnet.near.org',
+    nodeUrl: 'https://neart.lava.build',
     walletUrl: 'https://wallet.testnet.near.org',
     helperUrl: 'https://helper.testnet.near.org',
     keyStore: new keyStores.InMemoryKeyStore(),

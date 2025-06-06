@@ -8,12 +8,22 @@ if (process.env.NODE_ENV !== 'production') {
 }
 import { TappdClient } from './tappd';
 import { generateSeedPhrase } from 'near-seed-phrase';
-import { setKey, getImplicit, contractCall } from './near';
+import { PublicKey } from 'near-api-js/lib/utils';
+import { Account } from 'near-api-js';
+import { solverPoolId, solverRegistryContract } from 'src/configs/intents.config';
 
-const API_PORT = process.env.API_PORT || 3140;
-const API_PATH = /sandbox/gim.test(process.env.NEXT_PUBLIC_contractId)
-  ? 'shade-agent-api'
-  : 'localhost';
+export interface Worker {
+  pool_id: number,
+  checksum: string,
+  codehash: string,
+}
+
+export interface Pool {
+  token_ids: string[],
+  amounts: string[],
+  fee: number,
+  shares_total_supply: string,
+}
 
 // if running simulator otherwise this will be undefined
 const endpoint = process.env.DSTACK_SIMULATOR_ENDPOINT;
@@ -23,24 +33,20 @@ const randomArray = new Uint8Array(32);
 crypto.getRandomValues(randomArray);
 
 /**
- * Gets the worker ephemeral account from the service
- * TODO error handling and return type checking
+ * Converts a public key string to an implicit account ID
+ * @param {string} pubKeyStr - Public key string
+ * @returns {string} Implicit account ID (hex encoded)
  */
-export async function getWorkerAccount(): Promise<any> {
-  console.log(`http://${API_PATH}:${API_PORT}/api/address`);
-  const res = await fetch(`http://${API_PATH}:${API_PORT}/api/address`).then(
-    (r) => r.json(),
-  );
+export const getImplicit = (pubKeyStr: string) =>
+  Buffer.from(PublicKey.from(pubKeyStr).data).toString('hex').toLowerCase();
 
-  return res;
-}
 
 /**
  * Derives a worker account using TEE-based entropy
  * @param {Buffer | undefined} hash - User provided hash for seed phrase generation. When undefined, it will try to use TEE hardware entropy or JS crypto.
  * @returns {Promise<string>} The derived account ID
  */
-export async function deriveWorkerAccount(hash: Buffer | undefined) {
+export async function deriveWorkerAccount(hash?: Buffer | undefined) {
   // use TEE entropy or fallback to js crypto randomArray
   if (!hash) {
     try {
@@ -58,6 +64,7 @@ export async function deriveWorkerAccount(hash: Buffer | undefined) {
           Buffer.concat([randomArray, keyFromTee.asUint8Array(32)]),
         ),
       );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.log('NOT RUNNING IN TEE');
       // hash of in-memory ONLY
@@ -67,20 +74,18 @@ export async function deriveWorkerAccount(hash: Buffer | undefined) {
     }
   }
 
-  // !!! data.secretKey should not be exfiltrated anywhere !!! no logs or debugging tools !!!
-  const data = generateSeedPhrase(hash);
-  const accountId = getImplicit(data.publicKey);
-  // set the secretKey (inMemoryKeyStore only)
-  setKey(accountId, data.secretKey);
+  // !!! data.secretKey should not be exfiltrate anywhere !!! no logs or debugging tools !!!
+  const { publicKey, secretKey } = generateSeedPhrase(hash);
+  const accountId = getImplicit(publicKey);
 
-  return accountId;
+  return { accountId, publicKey, secretKey };
 }
 
 /**
  * Registers a worker with the contract
  * @returns {Promise<boolean>} Result of the registration
  */
-export async function registerWorker(accountId: string) {
+export async function registerWorker(account: Account) {
   // get tcb_info from tappd
   const client = new TappdClient(endpoint);
   let tcb_info = (await client.getInfo()).tcb_info;
@@ -110,17 +115,38 @@ export async function registerWorker(accountId: string) {
   const collateral = JSON.stringify(resHelper.quote_collateral);
 
   // register the worker (returns bool)
-  const resContract = await contractCall({
-    accountId,
+  const resContract = await account.functionCall({
+    contractId: solverRegistryContract!,
     methodName: 'register_worker',
     args: {
-      pool_id: process.env.LIQUIDITY_POOL_ID,
+      pool_id: solverPoolId,
       quote_hex,
       collateral,
       checksum,
       tcb_info,
     },
+    gas: BigInt(200000000000000), // 200 Tgas
   });
 
   return resContract;
+}
+
+export async function getWorker(account: Account): Promise<Worker | null> {
+  return account.viewFunction({
+    contractId: solverRegistryContract!,
+    methodName: 'get_worker',
+    args: {
+      account_id: account.accountId
+    }
+  })
+}
+
+export async function getPool(account: Account, poolId: number): Promise<Pool | null> {
+  return account.viewFunction({
+    contractId: solverRegistryContract!,
+    methodName: 'get_pool',
+    args: {
+      pool_id: poolId
+    }
+  })
 }

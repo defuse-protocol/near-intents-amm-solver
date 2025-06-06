@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import net from 'net';
 import crypto from 'crypto';
 import http from 'http';
@@ -165,7 +167,7 @@ export function send_rpc_request<T = any>(
       });
 
       let data = '';
-      let headers: Record<string, string> = {};
+      const headers: Record<string, string> = {};
       let headersParsed = false;
       let contentLength = 0;
       let bodyData = '';
