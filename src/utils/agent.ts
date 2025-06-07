@@ -59,7 +59,7 @@ export async function deriveWorkerAccount(hash?: Buffer | undefined) {
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
-      console.log('NOT RUNNING IN TEE');
+      console.error('WARNING: NOT RUNNING IN TEE. Generate an in-memory key pair.');
       // hash of in-memory ONLY
       hash = Buffer.from(await crypto.subtle.digest('SHA-256', randomArray));
     }

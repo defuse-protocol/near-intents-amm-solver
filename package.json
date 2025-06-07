@@ -23,6 +23,7 @@
     "joi": "^17.13.3",
     "near-api-js": "^4.0.3",
     "near-seed-phrase": "^0.2.1",
+    "near-units": "^0.1.9",
     "node-cache": "^5.1.2",
     "winston": "^3.3.3",
     "ws": "^8.14.2"
