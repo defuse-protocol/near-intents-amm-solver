@@ -61,8 +61,7 @@ function x509key_to_uint8array(pem: string, max_length?: number) {
 }
 
 function replay_rtmr(history: string[]): string {
-  const INIT_MR =
-    '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
+  const INIT_MR = '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
   if (history.length === 0) {
     return INIT_MR;
   }
@@ -91,19 +90,13 @@ interface EventLog {
 function reply_rtmrs(event_log: EventLog[]): Record<number, string> {
   const rtmrs: Array<string> = [];
   for (let idx = 0; idx < 4; idx++) {
-    const history = event_log
-      .filter((event) => event.imr === idx)
-      .map((event) => event.digest);
+    const history = event_log.filter((event) => event.imr === idx).map((event) => event.digest);
     rtmrs[idx] = replay_rtmr(history);
   }
   return rtmrs;
 }
 
-export function send_rpc_request<T = any>(
-  endpoint: string,
-  path: string,
-  payload: string,
-): Promise<T> {
+export function send_rpc_request<T = any>(endpoint: string, path: string, payload: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const abortController = new AbortController();
     const timeout = setTimeout(() => {
@@ -111,8 +104,7 @@ export function send_rpc_request<T = any>(
       reject(new Error('Request timed out'));
     }, 30_000); // 30 seconds timeout
 
-    const isHttp =
-      endpoint.startsWith('http://') || endpoint.startsWith('https://');
+    const isHttp = endpoint.startsWith('http://') || endpoint.startsWith('https://');
 
     if (isHttp) {
       const url = new URL(path, endpoint);
@@ -124,25 +116,21 @@ export function send_rpc_request<T = any>(
         },
       };
 
-      const req = (url.protocol === 'https:' ? https : http).request(
-        url,
-        options,
-        (res) => {
-          let data = '';
-          res.on('data', (chunk) => {
-            data += chunk;
-          });
-          res.on('end', () => {
-            clearTimeout(timeout);
-            try {
-              const result = JSON.parse(data);
-              resolve(result as T);
-            } catch (error) {
-              reject(new Error('Failed to parse response'));
-            }
-          });
-        },
-      );
+      const req = (url.protocol === 'https:' ? https : http).request(url, options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          clearTimeout(timeout);
+          try {
+            const result = JSON.parse(data);
+            resolve(result as T);
+          } catch (error) {
+            reject(new Error('Failed to parse response'));
+          }
+        });
+      });
 
       req.on('error', (error) => {
         clearTimeout(timeout);
@@ -177,9 +165,7 @@ export function send_rpc_request<T = any>(
         if (!headersParsed) {
           const headerEndIndex = data.indexOf('\r\n\r\n');
           if (headerEndIndex !== -1) {
-            const headerLines = data
-              .slice(0, headerEndIndex)
-              .split('\r\n');
+            const headerLines = data.slice(0, headerEndIndex).split('\r\n');
             headerLines.forEach((line) => {
               const [key, value] = line.split(': ');
               if (key && value) {
@@ -187,10 +173,7 @@ export function send_rpc_request<T = any>(
               }
             });
             headersParsed = true;
-            contentLength = parseInt(
-              headers['content-length'] || '0',
-              10,
-            );
+            contentLength = parseInt(headers['content-length'] || '0', 10);
             bodyData = data.slice(headerEndIndex + 4);
           }
         } else {
@@ -230,29 +213,19 @@ export class TappdClient {
 
   constructor(endpoint: string = '/var/run/tappd.sock') {
     if (process.env.DSTACK_SIMULATOR_ENDPOINT) {
-      console.debug(
-        `Using simulator endpoint: ${process.env.DSTACK_SIMULATOR_ENDPOINT}`,
-      );
+      console.debug(`Using simulator endpoint: ${process.env.DSTACK_SIMULATOR_ENDPOINT}`);
       endpoint = process.env.DSTACK_SIMULATOR_ENDPOINT;
     }
     this.endpoint = endpoint;
   }
 
   async getInfo(): Promise<any> {
-    const result = await send_rpc_request<any>(
-      this.endpoint,
-      '/prpc/Tappd.Info',
-      '',
-    );
+    const result = await send_rpc_request<any>(this.endpoint, '/prpc/Tappd.Info', '');
 
     return result;
   }
 
-  async deriveKey(
-    path?: string,
-    subject?: string,
-    alt_names?: string[],
-  ): Promise<DeriveKeyResponse> {
+  async deriveKey(path?: string, subject?: string, alt_names?: string[]): Promise<DeriveKeyResponse> {
     const raw: Record<string, any> = {
       path: path || '',
       subject: subject || path || '',
@@ -261,14 +234,9 @@ export class TappdClient {
       raw['alt_names'] = alt_names;
     }
     const payload = JSON.stringify(raw);
-    const result = await send_rpc_request<DeriveKeyResponse>(
-      this.endpoint,
-      '/prpc/Tappd.DeriveKey',
-      payload,
-    );
+    const result = await send_rpc_request<DeriveKeyResponse>(this.endpoint, '/prpc/Tappd.DeriveKey', payload);
     Object.defineProperty(result, 'asUint8Array', {
-      get: () => (length?: number) =>
-        x509key_to_uint8array(result.key, length),
+      get: () => (length?: number) => x509key_to_uint8array(result.key, length),
       enumerable: true,
       configurable: false,
     });
@@ -282,27 +250,20 @@ export class TappdClient {
     let hex = to_hex(report_data);
     if (hash_algorithm === 'raw') {
       if (hex.length > 128) {
-        throw new Error(
-          `Report data is too large, it should less then 64 bytes when hash_algorithm is raw.`,
-        );
+        throw new Error(`Report data is too large, it should less then 64 bytes when hash_algorithm is raw.`);
       }
       if (hex.length < 128) {
         hex = hex.padStart(128, '0');
       }
     }
     const payload = JSON.stringify({ report_data: hex, hash_algorithm });
-    const result = await send_rpc_request<TdxQuoteResponse>(
-      this.endpoint,
-      '/prpc/Tappd.TdxQuote',
-      payload,
-    );
+    const result = await send_rpc_request<TdxQuoteResponse>(this.endpoint, '/prpc/Tappd.TdxQuote', payload);
     if ('error' in result) {
       const err = result['error'] as string;
       throw new Error(err);
     }
     Object.defineProperty(result, 'replayRtmrs', {
-      get: () => () =>
-        reply_rtmrs(JSON.parse(result.event_log) as EventLog[]),
+      get: () => () => reply_rtmrs(JSON.parse(result.event_log) as EventLog[]),
       enumerable: true,
       configurable: false,
     });

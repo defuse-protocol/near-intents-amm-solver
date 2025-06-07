@@ -13,16 +13,16 @@ import { Account } from 'near-api-js';
 import { solverPoolId, solverRegistryContract } from 'src/configs/intents.config';
 
 export interface Worker {
-  pool_id: number,
-  checksum: string,
-  codehash: string,
+  pool_id: number;
+  checksum: string;
+  codehash: string;
 }
 
 export interface Pool {
-  token_ids: string[],
-  amounts: string[],
-  fee: number,
-  shares_total_supply: string,
+  token_ids: string[];
+  amounts: string[];
+  fee: number;
+  shares_total_supply: string;
 }
 
 // if running simulator otherwise this will be undefined
@@ -40,7 +40,6 @@ crypto.getRandomValues(randomArray);
 export const getImplicit = (pubKeyStr: string) =>
   Buffer.from(PublicKey.from(pubKeyStr).data).toString('hex').toLowerCase();
 
-
 /**
  * Derives a worker account using TEE-based entropy
  * @param {Buffer | undefined} hash - User provided hash for seed phrase generation. When undefined, it will try to use TEE hardware entropy or JS crypto.
@@ -53,24 +52,16 @@ export async function deriveWorkerAccount(hash?: Buffer | undefined) {
       // entropy from TEE hardware
       const client = new TappdClient(endpoint);
       const randomString = Buffer.from(randomArray).toString('hex');
-      const keyFromTee = await client.deriveKey(
-        randomString,
-        randomString,
-      );
+      const keyFromTee = await client.deriveKey(randomString, randomString);
       // hash of in-memory and TEE entropy
       hash = Buffer.from(
-        await crypto.subtle.digest(
-          'SHA-256',
-          Buffer.concat([randomArray, keyFromTee.asUint8Array(32)]),
-        ),
+        await crypto.subtle.digest('SHA-256', Buffer.concat([randomArray, keyFromTee.asUint8Array(32)])),
       );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.log('NOT RUNNING IN TEE');
       // hash of in-memory ONLY
-      hash = Buffer.from(
-        await crypto.subtle.digest('SHA-256', randomArray),
-      );
+      hash = Buffer.from(await crypto.subtle.digest('SHA-256', randomArray));
     }
   }
 
@@ -136,9 +127,9 @@ export async function getWorker(account: Account): Promise<Worker | null> {
     contractId: solverRegistryContract!,
     methodName: 'get_worker',
     args: {
-      account_id: account.accountId
-    }
-  })
+      account_id: account.accountId,
+    },
+  });
 }
 
 export async function getPool(account: Account, poolId: number): Promise<Pool | null> {
@@ -146,7 +137,7 @@ export async function getPool(account: Account, poolId: number): Promise<Pool | 
     contractId: solverRegistryContract!,
     methodName: 'get_pool',
     args: {
-      pool_id: poolId
-    }
-  })
+      pool_id: poolId,
+    },
+  });
 }

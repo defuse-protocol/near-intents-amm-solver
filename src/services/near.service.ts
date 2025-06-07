@@ -2,7 +2,7 @@ import { Account, connect, KeyPair, Near } from 'near-api-js';
 import { KeyStore } from 'near-api-js/lib/key_stores';
 import { nearConnectionConfig, nearNetworkId } from '../configs/near.config';
 import { LoggerService } from './logger.service';
-import { deriveWorkerAccount } from 'src/helper/agent';
+import { deriveWorkerAccount } from '../utils/agent';
 
 export class NearService {
   private near!: Near;
