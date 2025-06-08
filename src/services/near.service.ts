@@ -53,9 +53,9 @@ export class NearService {
       balance = available;
     } catch (e: unknown) {
       if (e instanceof Error && 'type' in e && e.type === 'AccountDoesNotExist') {
-        console.log(e.type);
+        // this.logger.info(e.type);
       } else {
-        throw e;
+        this.logger.error(e instanceof Error ? e.toString() : String(e));
       }
     }
     return balance;
