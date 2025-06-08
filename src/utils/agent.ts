@@ -116,6 +116,7 @@ export async function registerWorker(account: Account) {
       checksum,
       tcb_info,
     },
+    attachedDeposit: BigInt(1),   // 1 yocto NEAR
     gas: BigInt(200000000000000), // 200 Tgas
   });
 
