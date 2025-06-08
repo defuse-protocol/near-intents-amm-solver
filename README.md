@@ -81,3 +81,44 @@ Development mode (with automatic reload):
 npm run dev
 ```
 
+## Create Docker Image
+
+### Build
+
+From the root folder
+
+```bash
+docker buildx build --load --platform linux/amd64 -t intents-tee-amm-solver:latest -f Dockerfile .
+```
+
+## Push
+
+```bash
+export OWNER=robortyan
+# add tag to build
+docker tag intents-tee-amm-solver:latest ${OWNER}/intents-tee-amm-solver:latest
+# push image
+docker push ${OWNER}/intents-tee-amm-solver:latest
+```
+
+## Run Locally
+
+```bash
+export HOST_PORT=3000
+export NEAR_NETWORK_ID=testnet
+export INTENTS_CONTRACT=mock-intents.testnet
+export SOLVER_REGISTRY_CONTRACT=solver-registry-dev.testnet
+export SOLVER_POOL_ID=0
+export AMM_TOKEN1_ID=wrap.testnet
+export AMM_TOKEN2_ID=usdc.fakes.testnet
+
+docker run --platform linux/amd64 \
+    -p ${HOST_PORT}:3000 \
+    -e NEAR_NETWORK_ID=${NEAR_NETWORK_ID} \
+    -e INTENTS_CONTRACT=${INTENTS_CONTRACT} \
+    -e SOLVER_REGISTRY_CONTRACT=${SOLVER_REGISTRY_CONTRACT} \
+    -e SOLVER_POOL_ID=${SOLVER_POOL_ID} \
+    -e AMM_TOKEN1_ID=${AMM_TOKEN1_ID} \
+    -e AMM_TOKEN2_ID=${AMM_TOKEN2_ID} \
+    intents-tee-amm-solver:latest
+```
