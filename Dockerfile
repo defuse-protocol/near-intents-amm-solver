@@ -17,7 +17,7 @@ RUN npm ci
 FROM node:20-slim AS runtime
 
 WORKDIR /app
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Set up a non-root user
 RUN groupmod -g 1001 node \

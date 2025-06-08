@@ -106,6 +106,7 @@ docker push ${OWNER}/intents-tee-amm-solver:latest
 ```bash
 export HOST_PORT=3000
 export NEAR_NETWORK_ID=testnet
+export NEAR_NODE_URL=https://neart.lava.build
 export INTENTS_CONTRACT=mock-intents.testnet
 export SOLVER_REGISTRY_CONTRACT=solver-registry-dev.testnet
 export SOLVER_POOL_ID=0
@@ -115,6 +116,7 @@ export AMM_TOKEN2_ID=usdc.fakes.testnet
 docker run --platform linux/amd64 \
     -p ${HOST_PORT}:3000 \
     -e NEAR_NETWORK_ID=${NEAR_NETWORK_ID} \
+    -e NEAR_NODE_URL=${NEAR_NODE_URL} \
     -e INTENTS_CONTRACT=${INTENTS_CONTRACT} \
     -e SOLVER_REGISTRY_CONTRACT=${SOLVER_REGISTRY_CONTRACT} \
     -e SOLVER_POOL_ID=${SOLVER_POOL_ID} \
