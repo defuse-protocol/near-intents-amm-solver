@@ -110,7 +110,7 @@ export async function registerWorker(account: Account) {
     contractId: solverRegistryContract!,
     methodName: 'register_worker',
     args: {
-      pool_id: solverPoolId,
+      pool_id: Number(solverPoolId),
       quote_hex,
       collateral,
       checksum,
