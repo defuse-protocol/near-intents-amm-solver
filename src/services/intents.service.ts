@@ -17,12 +17,13 @@ export class IntentsService {
   }
 
   public async getBalancesOnContract(tokenIds: string[]) {
-    const account = this.nearService.getAccount();
-    const result = await account.viewFunction({
+    const signer = this.nearService.getSigner();
+    const liquidityPoolVault = this.nearService.getLiquidityPoolVaultId();
+    const result = await signer.viewFunction({
       contractId: intentsContract,
       methodName: 'mt_batch_balance_of',
       args: {
-        account_id: account.accountId,
+        account_id: liquidityPoolVault,
         token_ids: tokenIds,
       },
     });
@@ -34,12 +35,13 @@ export class IntentsService {
   }
 
   private async isNonceUsed(nonce: string) {
-    const account = this.nearService.getAccount();
-    return await account.viewFunction({
+    const signer = this.nearService.getSigner();
+    const liquidityPoolVault = this.nearService.getLiquidityPoolVaultId();
+    return await signer.viewFunction({
       contractId: intentsContract,
       methodName: 'is_nonce_used',
       args: {
-        account_id: account.accountId,
+        account_id: liquidityPoolVault,
         nonce,
       },
     });

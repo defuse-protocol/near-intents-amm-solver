@@ -13,7 +13,7 @@ export class HttpService {
         resp.writeHead(200);
         resp.end(JSON.stringify({ ready: true }));
       } else if (req.url === '/address') {
-        const address = this.nearService.getAccountId();
+        const address = this.nearService.getSignerId();
         resp.writeHead(200);
         resp.end(JSON.stringify({ address }));
       } else {

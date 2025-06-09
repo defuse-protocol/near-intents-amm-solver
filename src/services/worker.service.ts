@@ -17,7 +17,7 @@ export class WorkerService {
   }
 
   private async verifyTokenIds() {
-    const pool = await getPool(this.nearService.getAccount(), Number(solverPoolId!));
+    const pool = await getPool(this.nearService.getSigner(), Number(solverPoolId!));
     if (!pool) {
       throw new Error('Pool not found');
     }
@@ -36,7 +36,8 @@ export class WorkerService {
   }
 
   private async registerSolverInRegistry() {
-    let worker = await getWorker(this.nearService.getAccount());
+    const signer = this.nearService.getSigner();
+    let worker = await getWorker(signer);
     if (!worker) {
       let balance = '0';
       while (balance === '0') {
@@ -48,9 +49,9 @@ export class WorkerService {
         this.logger.info(`Account has no balance. Waiting to be funded...`);
         await sleep(60_000);
       }
-      await registerWorker(this.nearService.getAccount());
+      await registerWorker(signer);
       this.logger.info(`Worker registered`);
-      worker = await getWorker(this.nearService.getAccount());
+      worker = await getWorker(signer);
     }
 
     this.logger.info(`Worker: ${JSON.stringify(worker)}`);

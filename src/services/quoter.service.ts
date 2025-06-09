@@ -3,7 +3,7 @@ import bs58 from 'bs58';
 import { IMessage, SignStandardEnum } from '../interfaces/intents.interface';
 import { IQuoteRequestData, IQuoteResponseData } from '../interfaces/websocket.interface';
 import { CacheService } from './cache.service';
-import { intentsContract, liquidityPoolVaultContract } from '../configs/intents.config';
+import { intentsContract } from '../configs/intents.config';
 import { marginPercent, quoteDeadlineExtraMs, quoteDeadlineMaxMs } from '../configs/quoter.config';
 import { tokens } from '../configs/tokens';
 import { NearService } from './near.service';
@@ -89,9 +89,10 @@ export class QuoterService {
 
     const quoteDeadlineMs = params.min_deadline_ms + quoteDeadlineExtraMs;
     const standard = SignStandardEnum.nep413;
+    const liquidityPoolVault = this.nearService.getLiquidityPoolVaultId();
     const message: IMessage = {
-      // use liquidity pool contract as signer_id
-      signer_id: liquidityPoolVaultContract,
+      // use liquidity pool vault contract as signer_id
+      signer_id: liquidityPoolVault,
       deadline: new Date(Date.now() + quoteDeadlineMs).toISOString(),
       intents: [
         {

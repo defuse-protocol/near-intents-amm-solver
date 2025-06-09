@@ -3,6 +3,7 @@ import { KeyStore } from 'near-api-js/lib/key_stores';
 import { nearConnectionConfig, nearNetworkId } from '../configs/near.config';
 import { LoggerService } from './logger.service';
 import { deriveWorkerAccount } from '../utils/agent';
+import { liquidityPoolVaultContract } from 'src/configs/intents.config';
 
 export class NearService {
   private near!: Near;
@@ -25,26 +26,25 @@ export class NearService {
     this.publicKey = publicKey;
   }
 
-  public getAccount(): Account {
+  public getSigner(): Account {
     return this.account;
   }
 
-  public getAccountId(): string {
+  public getSignerId(): string {
     return this.account.accountId;
   }
 
-  public getPublicKey(): string {
-    return this.publicKey;
+  public getLiquidityPoolVaultId(): string {
+    return liquidityPoolVaultContract;
   }
 
   public async signMessage(message: Uint8Array) {
-    return (await this.keyStore.getKey(nearNetworkId, this.getAccountId())).sign(message);
+    return (await this.keyStore.getKey(nearNetworkId, this.getSignerId())).sign(message);
   }
 
   /**
-   * Gets the balance of a NEAR account
-   * @param {string} accountId - NEAR account ID
-   * @returns {Promise<{available: string}>} Account balance
+   * Gets the balance of the NEAR account
+   * @returns {Promise<string>} Account balance
    */
   public async getBalance() {
     let balance = '0';
