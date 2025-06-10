@@ -76,7 +76,7 @@ export async function deriveWorkerAccount(hash?: Buffer | undefined) {
  * Registers a worker with the contract
  * @returns {Promise<boolean>} Result of the registration
  */
-export async function registerWorker(account: Account) {
+export async function registerWorker(account: Account, publicKey: string) {
   // get tcb_info from tappd
   const client = new TappdClient(endpoint);
   let tcb_info = (await client.getInfo()).tcb_info;
@@ -86,9 +86,9 @@ export async function registerWorker(account: Account) {
     tcb_info = JSON.stringify(tcb_info);
   }
 
+  // add public key into the attestation report data
   // get TDX quote
-  const randomNumString = Math.random().toString();
-  const ra = await client.tdxQuote(randomNumString);
+  const ra = await client.tdxQuote(publicKey, "raw");
   const quote_hex = ra.quote.replace(/^0x/, '');
 
   // get quote collateral

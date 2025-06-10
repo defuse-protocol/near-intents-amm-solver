@@ -34,6 +34,10 @@ export class NearService {
     return this.account.accountId;
   }
 
+  public getSignerPublicKey(): string {
+    return this.publicKey;
+  }
+
   public getLiquidityPoolVaultId(): string {
     return liquidityPoolVaultContract;
   }

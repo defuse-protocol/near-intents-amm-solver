@@ -49,7 +49,9 @@ export class WorkerService {
         this.logger.info(`Account has no balance. Waiting to be funded...`);
         await sleep(60_000);
       }
-      await registerWorker(signer);
+      // register worker with the public key derived from TEE
+      const publicKey = this.nearService.getSignerPublicKey();
+      await registerWorker(signer, publicKey);
       this.logger.info(`Worker registered`);
       worker = await getWorker(signer);
     }
