@@ -1,40 +1,38 @@
 import Big from 'big.js';
-import { getAmountIn, getAmountOut } from '../src/services/quoter.service';
+import { getBuyQuote, getSellQuote } from '../src/services/quoter.service';
+import { LoggerService } from '../src/services/logger.service';
 
-const margin = 0.3;
+const SUPPLY = new Big(1000);
+const BUY_FEE = 0.01;
+const SELL_FEE = 0.1;
+const logger = new LoggerService('test');
 
-test('getAmountOut should be consistent for back and forth', () => {
-  const amountIn = new Big(10);
-  const reserveIn = new Big(10000);
-  const reserveOut = new Big(100000000);
-  const amountOut = getAmountOut(amountIn, reserveIn, reserveOut, margin);
+test('getSellQuote should return expected payout and apply fee', () => {
+  const amountIn = new Big(100); // selling 100 tokens
+  const payout = getSellQuote(amountIn, SUPPLY, logger);
 
-  console.log(`getAmountOut(${amountIn}, ${reserveIn}, ${reserveOut}, ${margin}) -> ${amountOut}`);
+  const rawPayout = SUPPLY.plus(amountIn).pow(2).minus(SUPPLY.pow(2)).mul(0.01);
+  const expected = rawPayout.mul(1 - SELL_FEE);
 
-  const newReserveOut = reserveOut.sub(amountOut);
-  const newReserveIn = reserveIn.add(amountIn);
-  const newAmountIn = getAmountOut(new Big(amountOut), newReserveOut, newReserveIn, margin);
-
-  console.log(`getAmountOut(${amountOut}, ${newReserveOut}, ${newReserveIn}, ${margin}) -> ${newAmountIn}`);
-
-  expect(Number(newAmountIn)).toBeLessThan(Number(amountIn));
-  expect(Number(newAmountIn)).toBeGreaterThanOrEqual(Math.floor(Number(amountIn) / (1 + (2 * margin) / 100)));
+  expect(Number(payout)).toBeCloseTo(Number(expected.toFixed(2)), 2);
 });
 
-test('getAmountIn should be consistent for back and forth', () => {
-  const amountOut = new Big(10);
-  const reserveIn = new Big(100000000);
-  const reserveOut = new Big(10000);
-  const amountIn = getAmountIn(amountOut, reserveIn, reserveOut, margin);
+test('getBuyQuote should return expected tokens and apply fee', () => {
+  const amountOutUSD = new Big(500); // want to buy $500 worth of tokens
+  const costInTokens = getBuyQuote(amountOutUSD, SUPPLY, logger);
 
-  console.log(`getAmountIn(${amountOut}, ${reserveIn}, ${reserveOut}, ${margin}) -> ${amountIn}`);
+  const gross = amountOutUSD.div(1 - BUY_FEE);
+  const newTotal = gross.div(0.01).add(SUPPLY.pow(2));
+  const expected = newTotal.sqrt().minus(SUPPLY);
 
-  const newReserveOut = reserveOut.sub(amountOut);
-  const newReserveIn = reserveIn.add(amountIn);
-  const newAmountOut = getAmountIn(new Big(amountIn), newReserveOut, newReserveIn, margin);
+  expect(Number(costInTokens)).toBeCloseTo(Number(expected.toFixed(0)), 0);
+});
 
-  console.log(`getAmountIn(${amountIn}, ${newReserveOut}, ${newReserveIn}, ${margin}) -> ${newAmountOut}`);
+test('buy then sell should result in small net loss due to fees', () => {
+  const usdToSpend = new Big(500);
+  const buyTokens = new Big(getBuyQuote(usdToSpend, SUPPLY, logger));
+  const usdBack = new Big(getSellQuote(buyTokens, SUPPLY, logger));
 
-  expect(Number(newAmountOut)).toBeGreaterThan(Number(amountOut));
-  expect(Number(newAmountOut)).toBeLessThanOrEqual(Math.ceil(Number(amountOut) * (1 + (2 * margin) / 100)));
+  expect(Number(usdBack)).toBeLessThan(Number(usdToSpend));
+  expect(Number(usdBack)).toBeGreaterThan(Number(usdToSpend.mul(1 - BUY_FEE - SELL_FEE).toFixed(2)));
 });
