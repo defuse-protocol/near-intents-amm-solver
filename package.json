@@ -1,5 +1,5 @@
 {
-  "name": "near-intents-amm-solver",
+  "name": "launchpad-solver",
   "version": "0.0.1",
   "description": "AMM Solver is a sample solver for the Near Intents protocol, implementing Automated Market Maker functionality for a given pair of NEP-141 tokens.",
   "scripts": {
