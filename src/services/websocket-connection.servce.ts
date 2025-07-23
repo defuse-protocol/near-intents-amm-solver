@@ -173,13 +173,13 @@ export class WebsocketConnectionService {
     const { quote_id, defuse_asset_identifier_in, defuse_asset_identifier_out } = quoteReq;
     const logger = this.logger.toScopeLogger(quote_id);
 
-    logger.info(`Received quote request: ${JSON.stringify(quoteReq)}`);
-
     try {
       if (!this.isTokenPairSupported(defuse_asset_identifier_in, defuse_asset_identifier_out)) {
         logger.debug(`Skipping unsupported pair (${defuse_asset_identifier_in} -> ${defuse_asset_identifier_out})`);
         return;
       }
+
+      logger.info(`Received supported quote request: ${JSON.stringify(quoteReq)}`);
 
       const quoteResp = await this.quoterService.getQuoteResponse(quoteReq);
       if (!quoteResp) {
