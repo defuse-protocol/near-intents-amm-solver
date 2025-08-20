@@ -47,7 +47,7 @@ export class WebsocketConnectionService {
   }
 
   private async sendRequestToRelay<TResult = unknown>(method: RelayMethod, params: unknown[], logger: LoggerService) {
-    logger.debug(`Number of pending requests before send: ${Object.keys(this.pendingRequests).length}`);
+    logger.debug(`Number of pending requests before send: ${this.pendingRequests.size}`);
     const request: IJsonrpcRelayRequest = {
       id: this.requestCounter++,
       jsonrpc: '2.0',
