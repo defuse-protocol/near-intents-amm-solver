@@ -13,6 +13,7 @@ export class HttpService {
         resp.writeHead(200);
         resp.end(JSON.stringify({ ready: true }));
       } else if (req.url === '/address') {
+        // TODO: This is not needed because we can get the address from the public key in attestation report
         const address = this.nearService.getSignerId();
         resp.writeHead(200);
         resp.end(JSON.stringify({ address }));
