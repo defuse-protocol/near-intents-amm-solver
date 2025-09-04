@@ -4,7 +4,7 @@ import { IntentsService } from './services/intents.service';
 import { NearService } from './services/near.service';
 import { QuoterService } from './services/quoter.service';
 import { HttpService } from './services/http.service';
-import { WebsocketConnectionService } from './services/websocket-connection.servce';
+import { WebsocketConnectionService } from './services/websocket-connection.service';
 import { WorkerService } from './services/worker.service';
 
 export async function app() {
