@@ -26,6 +26,7 @@
     "near-seed-phrase": "^0.2.1",
     "near-units": "^0.1.9",
     "node-cache": "^5.1.2",
+    "p-retry": "^7.0.0",
     "winston": "^3.3.3",
     "ws": "^8.14.2"
   },

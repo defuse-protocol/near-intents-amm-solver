@@ -12,6 +12,7 @@ import { Account } from 'near-api-js';
 import { solverPoolId, solverRegistryContract } from '../configs/intents.config';
 import { DstackClient } from '@phala/dstack-sdk';
 import crypto from 'node:crypto';
+import { FinalExecutionOutcome } from 'near-api-js/lib/providers';
 export interface Worker {
   pool_id: number;
   checksum: string;
@@ -39,13 +40,13 @@ crypto.getRandomValues(randomArray);
  * @param {string} pubKeyStr - Public key string
  * @returns {string} Implicit account ID (hex encoded)
  */
-export const getImplicit = (pubKeyStr: string) =>
+export const getImplicit = (pubKeyStr: string): string =>
   Buffer.from(PublicKey.from(pubKeyStr).data).toString('hex').toLowerCase();
 
 /**
  * Derives a worker account using TEE-based entropy
  * @param {Buffer | undefined} hash - User provided hash for seed phrase generation. When undefined, it will try to use TEE hardware entropy or JS crypto.
- * @returns {Promise<string>} The derived account ID
+ * @returns The derived account ID, public key and private key
  */
 export async function deriveWorkerAccount(hash?: Buffer | undefined) {
   // use TEE entropy or fallback to js crypto randomArray
@@ -118,9 +119,9 @@ function createReportData(publicKey: string): Uint8Array {
 
 /**
  * Registers a worker with the contract
- * @returns {Promise<boolean>} Result of the registration
+ * @returns {Promise<FinalExecutionOutcome>} Result of the registration
  */
-export async function registerWorker(account: Account, publicKey: string) {
+export async function registerWorker(account: Account, publicKey: string): Promise<FinalExecutionOutcome> {
   // get tcb_info from tappd
   const client = new DstackClient(endpoint);
   const tcb_info_obj = (await client.info()).tcb_info;
@@ -155,7 +156,7 @@ export async function registerWorker(account: Account, publicKey: string) {
   const collateral = JSON.stringify(resHelper.quote_collateral);
 
   // register the worker (returns bool)
-  const resContract = await account.functionCall({
+  return account.functionCall({
     contractId: solverRegistryContract!,
     methodName: 'register_worker',
     args: {
@@ -168,8 +169,24 @@ export async function registerWorker(account: Account, publicKey: string) {
     attachedDeposit: BigInt(1),   // 1 yocto NEAR
     gas: BigInt(200000000000000), // 200 Tgas
   });
+}
 
-  return resContract;
+/**
+ * Ping solver registry to notify the system that the worker is still alive
+ * @param account worker account
+ */
+export async function pingRegistry(account: Account) {
+  return account.functionCall({
+    contractId: solverRegistryContract!,
+    methodName: 'ping',
+  });
+}
+
+export async function getWorkerPingTimeoutMs(account: Account): Promise<number> {
+  return account.viewFunction({
+    contractId: solverRegistryContract!,
+    methodName: 'get_worker_ping_timeout_ms',
+  });
 }
 
 export async function getWorker(account: Account): Promise<Worker | null> {

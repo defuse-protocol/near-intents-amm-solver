@@ -1,19 +1,23 @@
 import { NearService } from './near.service';
-import { getPool, registerWorker } from 'src/utils/agent';
+import { getPool, getWorkerPingTimeoutMs, pingRegistry, registerWorker } from 'src/utils/agent';
 import { getWorker } from 'src/utils/agent';
 import { sleep } from 'src/utils/sleep';
 import { LoggerService } from './logger.service';
 import { NEAR } from 'near-units';
 import { solverPoolId } from 'src/configs/intents.config';
+import pRetry from 'p-retry';
 
 export class WorkerService {
   public constructor(private readonly nearService: NearService) {}
 
   private logger = new LoggerService('worker');
+  private workerPingTimeoutMs: number | undefined;
 
   public async init(): Promise<void> {
     await this.verifyTokenIds();
     await this.registerSolverInRegistry();
+    await this.queryWorkerPingTimeoutMs();
+    await this.heartbeat();
   }
 
   private async verifyTokenIds() {
@@ -49,6 +53,7 @@ export class WorkerService {
         this.logger.info(`Account has no balance. Waiting to be funded...`);
         await sleep(60_000);
       }
+
       // register worker with the public key derived from TEE
       const publicKey = this.nearService.getSignerPublicKey();
       await registerWorker(signer, publicKey);
@@ -57,5 +62,34 @@ export class WorkerService {
     }
 
     this.logger.info(`Worker: ${JSON.stringify(worker)}`);
+  }
+
+  private async queryWorkerPingTimeoutMs() {
+    const signer = this.nearService.getSigner();
+    if (!this.workerPingTimeoutMs) {
+      this.workerPingTimeoutMs = await getWorkerPingTimeoutMs(signer);
+    }
+    return this.workerPingTimeoutMs;
+  }
+
+  private async heartbeat() {
+    if (!this.workerPingTimeoutMs) {
+      this.logger.error('Worker ping timeout not available');
+      return;
+    }
+
+    try {
+      const signer = this.nearService.getSigner();
+      await pRetry(async () => await pingRegistry(signer), {retries: 5})
+
+      this.logger.info(`Pinged registry successfully`);
+    } catch (error) {
+      this.logger.error(`Failed to ping registry: ${error}`);
+    }
+
+    // ping again after half of the timeout
+    setTimeout(async () => {
+      await this.heartbeat();
+    }, this.workerPingTimeoutMs / 2);
   }
 }
