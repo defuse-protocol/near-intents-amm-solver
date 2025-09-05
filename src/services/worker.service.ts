@@ -22,7 +22,7 @@ export class WorkerService {
   }
 
   private async verifyTokenIds() {
-    const pool = await getPool(this.nearService.getSigner(), Number(solverPoolId!));
+    const pool = await getPool(this.nearService.getAccount(), Number(solverPoolId!));
     if (!pool) {
       throw new Error('Pool not found');
     }
@@ -41,12 +41,12 @@ export class WorkerService {
   }
 
   private async reportAccountId() {
-    const signer = this.nearService.getSigner();
+    const signer = this.nearService.getAccount();
     await reportWorkerId(signer);
   }
 
   private async registerSolverInRegistry() {
-    const signer = this.nearService.getSigner();
+    const signer = this.nearService.getAccount();
     let worker = await getWorker(signer);
     if (!worker) {
       let balance = '0';
@@ -61,7 +61,7 @@ export class WorkerService {
       }
 
       // register worker with the public key derived from TEE
-      const publicKey = this.nearService.getSignerPublicKey();
+      const publicKey = this.nearService.getAccountPublicKey();
       await registerWorker(signer, publicKey);
       this.logger.info(`Worker registered`);
       worker = await getWorker(signer);
@@ -71,7 +71,7 @@ export class WorkerService {
   }
 
   private async queryPingTimeoutMs() {
-    const signer = this.nearService.getSigner();
+    const signer = this.nearService.getAccount();
     if (!this.pingTimeoutMs) {
       this.pingTimeoutMs = await getWorkerPingTimeoutMs(signer);
     }
@@ -85,7 +85,7 @@ export class WorkerService {
     }
 
     try {
-      const signer = this.nearService.getSigner();
+      const signer = this.nearService.getAccount();
       await pRetry(async () => await pingRegistry(signer), {retries: 5})
 
       this.logger.info(`Pinged registry successfully`);

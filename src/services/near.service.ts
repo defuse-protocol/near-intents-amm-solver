@@ -26,15 +26,15 @@ export class NearService {
     this.publicKey = publicKey;
   }
 
-  public getSigner(): Account {
+  public getAccount(): Account {
     return this.account;
   }
 
-  public getSignerId(): string {
+  public getAccountId(): string {
     return this.account.accountId;
   }
 
-  public getSignerPublicKey(): string {
+  public getAccountPublicKey(): string {
     return this.publicKey;
   }
 
@@ -43,7 +43,7 @@ export class NearService {
   }
 
   public async signMessage(message: Uint8Array) {
-    return (await this.keyStore.getKey(nearNetworkId, this.getSignerId())).sign(message);
+    return (await this.keyStore.getKey(nearNetworkId, this.getAccountId())).sign(message);
   }
 
   /**

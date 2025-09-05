@@ -190,7 +190,7 @@ export async function reportWorkerId(account: Account) {
   const accountId = account.accountId;
   const { checksum } = await getQuote(client, accountId);
 
-  console.log(`--> Reported account ID with checksum: ${checksum}`);
+  console.log(`--> Reported worker ID with checksum: ${checksum}`);
 }
 
 /**
