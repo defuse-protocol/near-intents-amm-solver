@@ -3,7 +3,7 @@ import { KeyStore } from 'near-api-js/lib/key_stores';
 import { nearAccountConfig, nearConnectionConfig, nearNetworkId } from '../configs/near.config';
 import { LoggerService } from './logger.service';
 import { deriveWorkerAccount } from '../utils/agent';
-import { liquidityPoolContract } from 'src/configs/intents.config';
+import { liquidityPoolContract, solverPoolId, solverRegistryContract } from 'src/configs/intents.config';
 import { teeEnabled } from 'src/configs/tee.config';
 
 export class NearService {
@@ -20,16 +20,23 @@ export class NearService {
     this.keyStore = this.near.config.keyStore;
 
     if (teeEnabled) {
+      if (!solverRegistryContract) {
+        throw new Error('SOLVER_REGISTRY_CONTRACT is not defined');
+      }
+      if (!solverPoolId) {
+        throw new Error('SOLVER_POOL_ID is not defined');
+      }
+
       const { accountId, publicKey, secretKey: privateKey } = await deriveWorkerAccount();
       this.publicKey = publicKey;
       const keyPair = KeyPair.fromString(privateKey);
       await this.keyStore.setKey(nearNetworkId, accountId, keyPair);
       this.account = await this.near.account(accountId);
     } else {
-      if (!nearAccountConfig.privateKey) {
+      if (!nearAccountConfig.accountId) {
         throw new Error('NEAR_ACCOUNT_ID is not defined');
       }
-      if (!nearAccountConfig.accountId) {
+      if (!nearAccountConfig.privateKey) {
         throw new Error('NEAR_PRIVATE_KEY is not defined');
       }
 
