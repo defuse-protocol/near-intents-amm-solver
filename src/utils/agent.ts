@@ -117,6 +117,34 @@ function createReportData(publicKey: string): Uint8Array {
   return reportData;
 }
 
+export async function getQuote(client: DstackClient, reportData: string | Buffer | Uint8Array): Promise<{
+  quote_hex: string,
+  checksum: string,
+  quote_collateral: unknown
+}> {
+  // get TDX quote
+  const ra = await client.getQuote(reportData);
+  const quote_hex = ra.quote.replace(/^0x/, '');
+
+  // get quote collateral
+  const formData = new FormData();
+  formData.append('hex', quote_hex);
+
+  // WARNING: this endpoint could throw or be offline
+  const result = await (
+    await fetch('https://proof.t16z.com/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
+  ).json();
+
+  return {
+    quote_hex,
+    checksum: result.checksum,
+    quote_collateral: result.quote_collateral,
+  }
+}
+
 /**
  * Registers a worker with the contract
  * @returns {Promise<FinalExecutionOutcome>} Result of the registration
@@ -137,23 +165,8 @@ export async function registerWorker(account: Account, publicKey: string): Promi
   console.log('reportData (hex)', Buffer.from(reportData).toString('hex'));
   console.log('reportData length', reportData.length);
 
-  // get TDX quote
-  const ra = await client.getQuote(reportData);
-  const quote_hex = ra.quote.replace(/^0x/, '');
-
-  // get quote collateral
-  const formData = new FormData();
-  formData.append('hex', quote_hex);
-
-  // WARNING: this endpoint could throw or be offline
-  const resHelper = await (
-    await fetch('https://proof.t16z.com/api/upload', {
-      method: 'POST',
-      body: formData,
-    })
-  ).json();
-  const checksum = resHelper.checksum;
-  const collateral = JSON.stringify(resHelper.quote_collateral);
+  const { quote_hex, checksum, quote_collateral } = await getQuote(client, reportData);
+  const collateral = JSON.stringify(quote_collateral);
 
   // register the worker (returns bool)
   return account.functionCall({
@@ -169,6 +182,15 @@ export async function registerWorker(account: Account, publicKey: string): Promi
     attachedDeposit: BigInt(1),   // 1 yocto NEAR
     gas: BigInt(200000000000000), // 200 Tgas
   });
+}
+
+export async function reportWorkerId(account: Account) {
+  const client = new DstackClient(endpoint);
+
+  const accountId = account.accountId;
+  const { checksum } = await getQuote(client, accountId);
+
+  console.log(`--> Reported account ID with checksum: ${checksum}`);
 }
 
 /**

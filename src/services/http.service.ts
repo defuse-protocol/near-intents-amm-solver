@@ -1,22 +1,16 @@
 import { createServer, Server } from 'http';
 import { LoggerService } from './logger.service';
-import { NearService } from './near.service';
 
 export class HttpService {
   private server: Server;
 
   private logger = new LoggerService('http');
 
-  public constructor(private readonly nearService: NearService) {
+  public constructor() {
     this.server = createServer((req, resp) => {
       if (req.url === '/') {
         resp.writeHead(200);
         resp.end(JSON.stringify({ ready: true }));
-      } else if (req.url === '/address') {
-        // TODO: remove the endpoint because we want to get the address from attestation report
-        const address = this.nearService.getSignerId();
-        resp.writeHead(200);
-        resp.end(JSON.stringify({ address }));
       } else {
         resp.writeHead(404);
         resp.end();

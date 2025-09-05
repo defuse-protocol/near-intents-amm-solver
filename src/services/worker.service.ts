@@ -1,5 +1,5 @@
 import { NearService } from './near.service';
-import { getPool, getWorkerPingTimeoutMs, pingRegistry, registerWorker } from 'src/utils/agent';
+import { getPool, getWorkerPingTimeoutMs, pingRegistry, registerWorker, reportWorkerId } from 'src/utils/agent';
 import { getWorker } from 'src/utils/agent';
 import { sleep } from 'src/utils/sleep';
 import { LoggerService } from './logger.service';
@@ -11,12 +11,13 @@ export class WorkerService {
   public constructor(private readonly nearService: NearService) {}
 
   private logger = new LoggerService('worker');
-  private workerPingTimeoutMs: number | undefined;
+  private pingTimeoutMs: number | undefined;
 
   public async init(): Promise<void> {
     await this.verifyTokenIds();
+    await this.reportAccountId();
     await this.registerSolverInRegistry();
-    await this.queryWorkerPingTimeoutMs();
+    await this.queryPingTimeoutMs();
     await this.heartbeat();
   }
 
@@ -37,6 +38,11 @@ export class WorkerService {
       throw new Error('Pool has invalid token IDs');
     }
     this.logger.info(`The tokens in the pool: (${tokenIds.join(', ')})`);
+  }
+
+  private async reportAccountId() {
+    const signer = this.nearService.getSigner();
+    await reportWorkerId(signer);
   }
 
   private async registerSolverInRegistry() {
@@ -64,16 +70,16 @@ export class WorkerService {
     this.logger.info(`Worker: ${JSON.stringify(worker)}`);
   }
 
-  private async queryWorkerPingTimeoutMs() {
+  private async queryPingTimeoutMs() {
     const signer = this.nearService.getSigner();
-    if (!this.workerPingTimeoutMs) {
-      this.workerPingTimeoutMs = await getWorkerPingTimeoutMs(signer);
+    if (!this.pingTimeoutMs) {
+      this.pingTimeoutMs = await getWorkerPingTimeoutMs(signer);
     }
-    return this.workerPingTimeoutMs;
+    return this.pingTimeoutMs;
   }
 
   private async heartbeat() {
-    if (!this.workerPingTimeoutMs) {
+    if (!this.pingTimeoutMs) {
       this.logger.error('Worker ping timeout not available');
       return;
     }
@@ -90,6 +96,6 @@ export class WorkerService {
     // ping again after half of the timeout
     setTimeout(async () => {
       await this.heartbeat();
-    }, this.workerPingTimeoutMs / 2);
+    }, this.pingTimeoutMs / 2);
   }
 }

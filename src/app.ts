@@ -15,9 +15,6 @@ export async function app() {
 
   const intentsService = new IntentsService(nearService);
 
-  const httpService = new HttpService(nearService);
-  httpService.start();
-
   const workerService = new WorkerService(nearService);
   await workerService.init();
 
@@ -29,4 +26,7 @@ export async function app() {
 
   const websocketService = new WebsocketConnectionService(quoterService, cacheService);
   websocketService.start();
+
+  const httpService = new HttpService();
+  httpService.start();
 }
