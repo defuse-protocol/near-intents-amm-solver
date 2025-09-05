@@ -151,16 +151,11 @@ export async function registerWorker(account: Account, publicKey: string): Promi
   const client = new DstackClient(endpoint);
   const tcb_info_obj = (await client.info()).tcb_info;
 
-  console.log('tcb_info_obj:', tcb_info_obj);
-
   // parse tcb_info
   const tcb_info = typeof tcb_info_obj !== 'string' ? JSON.stringify(tcb_info_obj) : tcb_info_obj;
 
   // Create report data for TEE attestation
   const reportData = createReportData(publicKey);
-  console.log('registered publicKey', publicKey);
-  console.log('reportData (hex)', Buffer.from(reportData).toString('hex'));
-  console.log('reportData length', reportData.length);
 
   const { quote_hex, checksum, quote_collateral } = await getQuote(client, reportData);
   const collateral = JSON.stringify(quote_collateral);
