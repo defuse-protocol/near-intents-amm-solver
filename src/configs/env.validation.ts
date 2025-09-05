@@ -10,11 +10,29 @@ export const envVariablesValidationSchema = Joi.object({
 
   TEE_ENABLED: Joi.boolean().default(false),
 
-  SOLVER_REGISTRY_CONTRACT: Joi.string().allow('', null),
-  SOLVER_POOL_ID: Joi.number().integer().allow(null),
+  // required for TEE mode: solver registry contract and pool ID
+  SOLVER_REGISTRY_CONTRACT: Joi.alternatives().conditional('TEE_ENABLED', {
+    is: true,
+    then: Joi.string().required(),
+    otherwise: Joi.string().allow('', null),
+  }),
+  SOLVER_POOL_ID: Joi.alternatives().conditional('TEE_ENABLED', {
+    is: true,
+    then: Joi.number().integer().required(),
+    otherwise: Joi.number().integer().allow(null),
+  }),
 
-  NEAR_ACCOUNT_ID: Joi.string().allow('', null),
-  NEAR_PRIVATE_KEY: Joi.string().allow('', null),
+  // required for non-TEE mode: near account ID and private key
+  NEAR_ACCOUNT_ID: Joi.alternatives().conditional('TEE_ENABLED', {
+    is: true,
+    then: Joi.string().allow('', null),
+    otherwise: Joi.string().required(),
+  }),
+  NEAR_PRIVATE_KEY: Joi.alternatives().conditional('TEE_ENABLED', {
+    is: true,
+    then: Joi.string().allow('', null),
+    otherwise: Joi.string().required(),
+  }),
 
   NEAR_NETWORK_ID: Joi.string().valid('mainnet', 'testnet').allow('', null),
   NEAR_NODE_URL: Joi.string().allow('', null),
