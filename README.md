@@ -34,7 +34,7 @@ set NODE_ENV=local && npm start
 
 #### (1) TEE Mode
 
-In TEE Mode, the solver pool contract own the token reserves on the NEAR Intents contract. A key pair will be generated within TEE and nobody has access to that, with the public key added to the solver pool contract on NEAR Intents. We only need to provide the solver registry contract and pool ID, and the solver in TEE will be automatically registered and start working.
+In TEE Mode, the solver pool contract owns the token reserves on the NEAR Intents contract. A key pair is generated inside the TEE (no one has access to it), and its public key is added to the solver pool contract on NEAR Intents. You only need to provide the solver registry contract and the pool ID; the solver running in the TEE will automatically register and start serving.
 
 * `TEE_ENABLED` - set to `true` if the solver needs to be run inside TEE
 * `SOLVER_REGISTRY_CONTRACT` - the solver registry contract on NEAR for the solvers to register themselves, e.g. `solver-registry.near`
