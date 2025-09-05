@@ -75,6 +75,8 @@ export class WorkerService {
       await registerWorker(signer, publicKey);
       this.logger.info(`Worker registered`);
       worker = await getWorker(this.nearService, signer.accountId);
+    } else {
+      this.logger.warn(`Worker already registered`);
     }
 
     this.logger.info(`Worker: ${JSON.stringify(worker)}`);
@@ -88,7 +90,8 @@ export class WorkerService {
   }
 
   private async heartbeat() {
-    if (!this.pingTimeoutMs) {
+    const pingTimeoutMs = await this.queryPingTimeoutMs();
+    if (!pingTimeoutMs) {
       this.logger.error('Worker ping timeout not available');
       return;
     }
@@ -105,6 +108,6 @@ export class WorkerService {
     // ping again after half of the timeout
     setTimeout(async () => {
       await this.heartbeat();
-    }, this.pingTimeoutMs / 2);
+    }, pingTimeoutMs / 2);
   }
 }

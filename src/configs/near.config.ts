@@ -27,7 +27,7 @@ export const nodeUrls = urlEnv
 
 export const nearConnectionConfigs: INearConnectionConfig[] = nodeUrls.map((nodeUrl) => ({
   ...nearDefaultConnectionConfigs[nearNetworkId],
-  nodeUrl: nodeUrl,
+  nodeUrl,
 })) as INearConnectionConfig[];
 
 export const nearAccountConfig: INearAccountConfig = {

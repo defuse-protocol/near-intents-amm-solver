@@ -118,7 +118,7 @@ export class NearService {
         args,
       });
     }));
-    // deep compare the results
+    // Deeply compare the results
     if (results.every((result) => JSON.stringify(result) === JSON.stringify(results[0]))) {
       return results[0];
     }

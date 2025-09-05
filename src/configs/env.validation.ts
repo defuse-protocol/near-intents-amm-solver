@@ -36,6 +36,7 @@ export const envVariablesValidationSchema = Joi.object({
 
   NEAR_NETWORK_ID: Joi.string().valid('mainnet', 'testnet').allow('', null),
   NEAR_NODE_URL: Joi.string().allow('', null),
+  // multiple node URLs for cross-checking results, separated by comma, e.g. `https://free.rpc.fastnear.com,https://near.lava.build`
   NEAR_NODE_URLS: Joi.string().allow('', null),
 
   AMM_TOKEN1_ID: Joi.string().required(),

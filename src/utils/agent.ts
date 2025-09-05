@@ -104,10 +104,6 @@ function createReportData(publicKey: string): Uint8Array {
   const publicKeyHash = crypto.createHash('sha3-384').update(publicKeyBytes).digest();
 
   // Verify hash length is exactly 48 bytes (SHA3-384 produces 384 bits = 48 bytes)
-  console.log('publicKeyBytes length:', publicKeyBytes.length);
-  console.log('publicKeyHash length:', publicKeyHash.length);
-  console.log('Expected hash length: 48 bytes (SHA3-384 = 384 bits)');
-
   if (publicKeyHash.length !== PUBLIC_KEYS_HASH_SIZE) {
     throw new Error(`Expected SHA3-384 hash to be 48 bytes, but got ${publicKeyHash.length} bytes`);
   }
