@@ -31,7 +31,7 @@ export class NearService {
 
       const { accountId, publicKey, secretKey: privateKey } = await deriveWorkerAccount();
       this.publicKey = publicKey;
-      const keyPair = KeyPair.fromString(privateKey);
+      const keyPair = KeyPair.fromString(privateKey as `ed25519:${string}`);
       await this.keyStore.setKey(nearNetworkId, accountId, keyPair);
       this.account = await this.near.account(accountId);
 
@@ -51,7 +51,7 @@ export class NearService {
         throw new Error('NEAR_PRIVATE_KEY is not defined');
       }
 
-      const keyPair = KeyPair.fromString(nearAccountConfig.privateKey);
+      const keyPair = KeyPair.fromString(nearAccountConfig.privateKey as `ed25519:${string}`);
       await this.keyStore.setKey(nearNetworkId, nearAccountConfig.accountId, keyPair);
       this.account = await this.near.account(nearAccountConfig.accountId);
     }
