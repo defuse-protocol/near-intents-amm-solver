@@ -1,7 +1,6 @@
 import { randomBytes, createHash } from 'crypto';
 import { intentsContract } from '../configs/intents.config';
 import { NearService } from './near.service';
-import { teeEnabled } from 'src/configs/tee.config';
 
 export class IntentsService {
   public constructor(private readonly nearService: NearService) {}

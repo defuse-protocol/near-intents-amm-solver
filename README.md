@@ -31,6 +31,17 @@ set NODE_ENV=local && npm start
 ### Required parameters
 
 * `AMM_TOKEN1_ID` and `AMM_TOKEN2_ID` — a pair of NEP-141 token IDs for the AMM, e.g., `usdt.tether-token.near` and `wrap.near`.
+
+#### (1) TEE Mode
+
+In TEE Mode, the solver pool contract own the token reserves on the NEAR Intents contract. A key pair will be generated within TEE and nobody has access to that, with the public key added to the solver pool contract on NEAR Intents. We only need to provide the solver registry contract and pool ID, and the solver in TEE will be automatically registered and start working.
+
+* `TEE_ENABLED` - set to `true` if the solver needs to be run inside TEE
+* `SOLVER_REGISTRY_CONTRACT` - the solver registry contract on NEAR for the solvers to register themselves, e.g. `solver-registry.near`
+* `SOLVER_POOL_ID` - the pool ID that the solver pool contract, e.g. `0`, `1`, ...
+
+#### (2) Non-TEE Mode
+
 * `NEAR_ACCOUNT_ID` — the solver's account ID on Near, e.g., `solver1.near`. This account should be the owner of token reserves on the Near Intents contract (see the "Preparation" section below for details).
 * `NEAR_PRIVATE_KEY` — the solver's account private key in a prefixed base-58 form, e.g. `ed25519:pR1vat3K37...`. The corresponding public key should be added to the Near Intents contract (see the "Preparation" section below for details).
 
@@ -81,46 +92,9 @@ Development mode (with automatic reload):
 npm run dev
 ```
 
-## Create Docker Image
+TEE mode:
 
-### Build
+You have multiple ways to run the solver inside TEE:
 
-From the root folder
-
-```bash
-docker buildx build --load --platform linux/amd64 -t intents-tee-amm-solver:latest -f Dockerfile .
-```
-
-## Push
-
-```bash
-export OWNER=robortyan
-# add tag to build
-docker tag intents-tee-amm-solver:latest ${OWNER}/intents-tee-amm-solver:latest
-# push image
-docker push ${OWNER}/intents-tee-amm-solver:latest
-```
-
-## Run Locally
-
-```bash
-export HOST_PORT=3000
-export NEAR_NETWORK_ID=testnet
-export NEAR_NODE_URL=https://neart.lava.build
-export INTENTS_CONTRACT=mock-intents.testnet
-export SOLVER_REGISTRY_CONTRACT=solver-registry-dev.testnet
-export SOLVER_POOL_ID=0
-export AMM_TOKEN1_ID=wrap.testnet
-export AMM_TOKEN2_ID=usdc.fakes.testnet
-
-docker run --platform linux/amd64 \
-    -p ${HOST_PORT}:3000 \
-    -e NEAR_NETWORK_ID=${NEAR_NETWORK_ID} \
-    -e NEAR_NODE_URL=${NEAR_NODE_URL} \
-    -e INTENTS_CONTRACT=${INTENTS_CONTRACT} \
-    -e SOLVER_REGISTRY_CONTRACT=${SOLVER_REGISTRY_CONTRACT} \
-    -e SOLVER_POOL_ID=${SOLVER_POOL_ID} \
-    -e AMM_TOKEN1_ID=${AMM_TOKEN1_ID} \
-    -e AMM_TOKEN2_ID=${AMM_TOKEN2_ID} \
-    intents-tee-amm-solver:latest
-```
+1. use the [TEE solver server](https://github.com/Near-One/tee-solver/tree/main/server)
+2. follow the [Phala Cloud](https://docs.phala.com/phala-cloud/cvm/overview) docs
