@@ -1,15 +1,16 @@
 import { Account, connect, KeyPair, Near } from 'near-api-js';
 import { KeyStore } from 'near-api-js/lib/key_stores';
-import { nearConnectionConfig, nearNetworkId } from '../configs/near.config';
+import { nearAccountConfig, nearConnectionConfig, nearNetworkId } from '../configs/near.config';
 import { LoggerService } from './logger.service';
 import { deriveWorkerAccount } from '../utils/agent';
 import { liquidityPoolContract } from 'src/configs/intents.config';
+import { teeEnabled } from 'src/configs/tee.config';
 
 export class NearService {
   private near!: Near;
   private keyStore!: KeyStore;
   private account!: Account;
-  private publicKey!: string;
+  private publicKey: string | undefined;
 
   private logger = new LoggerService('near');
 
@@ -18,12 +19,24 @@ export class NearService {
     this.near = await connect(nearConnectionConfig);
     this.keyStore = this.near.config.keyStore;
 
-    const { accountId, publicKey, secretKey: privateKey } = await deriveWorkerAccount();
+    if (teeEnabled) {
+      const { accountId, publicKey, secretKey: privateKey } = await deriveWorkerAccount();
+      this.publicKey = publicKey;
+      const keyPair = KeyPair.fromString(privateKey);
+      await this.keyStore.setKey(nearNetworkId, accountId, keyPair);
+      this.account = await this.near.account(accountId);
+    } else {
+      if (!nearAccountConfig.privateKey) {
+        throw new Error('NEAR_ACCOUNT_ID is not defined');
+      }
+      if (!nearAccountConfig.accountId) {
+        throw new Error('NEAR_PRIVATE_KEY is not defined');
+      }
 
-    const keyPair = KeyPair.fromString(privateKey);
-    await this.keyStore.setKey(nearNetworkId, accountId, keyPair);
-    this.account = await this.near.account(accountId);
-    this.publicKey = publicKey;
+      const keyPair = KeyPair.fromString(nearAccountConfig.privateKey);
+      await this.keyStore.setKey(nearNetworkId, nearAccountConfig.accountId, keyPair);
+      this.account = await this.near.account(nearAccountConfig.accountId);
+    }
   }
 
   public getAccount(): Account {
@@ -35,11 +48,18 @@ export class NearService {
   }
 
   public getAccountPublicKey(): string {
-    return this.publicKey;
+    return this.publicKey ?? '';
   }
 
-  public getLiquidityPoolContractId(): string {
-    return liquidityPoolContract;
+  public getIntentsAccountId(): string {
+    if (teeEnabled) {
+      // use liquidity pool contract as solver signer ID if TEE is enabled
+      if (!liquidityPoolContract) {
+        throw new Error('Liquidity pool contract is not defined');
+      }
+      return liquidityPoolContract;
+    }
+    return this.getAccountId();
   }
 
   public async signMessage(message: Uint8Array) {

@@ -6,6 +6,7 @@ import { QuoterService } from './services/quoter.service';
 import { HttpService } from './services/http.service';
 import { WebsocketConnectionService } from './services/websocket-connection.service';
 import { WorkerService } from './services/worker.service';
+import { teeEnabled } from 'src/configs/tee.config';
 
 export async function app() {
   const cacheService = new CacheService();
@@ -15,8 +16,10 @@ export async function app() {
 
   const intentsService = new IntentsService(nearService);
 
-  const workerService = new WorkerService(nearService);
-  await workerService.init();
+  if (teeEnabled) {
+    const workerService = new WorkerService(nearService);
+    await workerService.init();
+  }
 
   const quoterService = new QuoterService(cacheService, nearService, intentsService);
   await quoterService.updateCurrentState();

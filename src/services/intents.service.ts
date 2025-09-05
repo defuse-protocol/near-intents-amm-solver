@@ -1,6 +1,7 @@
 import { randomBytes, createHash } from 'crypto';
 import { intentsContract } from '../configs/intents.config';
 import { NearService } from './near.service';
+import { teeEnabled } from 'src/configs/tee.config';
 
 export class IntentsService {
   public constructor(private readonly nearService: NearService) {}
@@ -17,7 +18,7 @@ export class IntentsService {
   }
 
   public getIntentsAccountId(): string {
-    return this.nearService.getLiquidityPoolContractId();
+    return teeEnabled ? this.nearService.getIntentsAccountId() : this.nearService.getAccountId();
   }
 
   public async getBalancesOnContract(tokenIds: string[]) {

@@ -11,7 +11,7 @@ import {
   RelayMethod,
   RelayEventKind,
 } from '../interfaces/websocket.interface';
-import { tokens } from '../configs/tokens';
+import { tokens } from '../configs/tokens.config';
 import { wsRelayUrl } from '../configs/websocket.config';
 import { LoggerService } from './logger.service';
 import { QuoterService } from './quoter.service';

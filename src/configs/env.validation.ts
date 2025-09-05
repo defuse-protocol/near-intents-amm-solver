@@ -8,11 +8,13 @@ export const envVariablesValidationSchema = Joi.object({
   RELAY_WS_URL: Joi.string().allow('', null),
   RELAY_AUTH_KEY: Joi.string().allow('', null),
 
-  SOLVER_REGISTRY_CONTRACT: Joi.string().required(),
-  SOLVER_POOL_ID: Joi.number().integer().required(),
+  TEE_ENABLED: Joi.boolean().default(false),
 
-  // NEAR_ACCOUNT_ID: Joi.string().allow('', null),
-  // NEAR_PRIVATE_KEY: Joi.string().allow('', null),
+  SOLVER_REGISTRY_CONTRACT: Joi.string().allow('', null),
+  SOLVER_POOL_ID: Joi.number().integer().allow(null),
+
+  NEAR_ACCOUNT_ID: Joi.string().allow('', null),
+  NEAR_PRIVATE_KEY: Joi.string().allow('', null),
 
   NEAR_NETWORK_ID: Joi.string().valid('mainnet', 'testnet').allow('', null),
   NEAR_NODE_URL: Joi.string().allow('', null),
