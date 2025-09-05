@@ -13,6 +13,7 @@ import { solverPoolId, solverRegistryContract } from '../configs/intents.config'
 import { DstackClient } from '@phala/dstack-sdk';
 import crypto from 'node:crypto';
 import { FinalExecutionOutcome } from 'near-api-js/lib/providers';
+import { NearService } from 'src/services/near.service';
 export interface Worker {
   pool_id: number;
   checksum: string;
@@ -204,25 +205,25 @@ export async function pingRegistry(account: Account) {
   });
 }
 
-export async function getWorkerPingTimeoutMs(account: Account): Promise<number> {
-  return account.viewFunction({
+export async function getWorkerPingTimeoutMs(nearService: NearService): Promise<number> {
+  return nearService.secureViewFunction({
     contractId: solverRegistryContract!,
     methodName: 'get_worker_ping_timeout_ms',
   });
 }
 
-export async function getWorker(account: Account): Promise<Worker | null> {
-  return account.viewFunction({
+export async function getWorker(nearService: NearService, workerId: string): Promise<Worker | null> {
+  return nearService.secureViewFunction({
     contractId: solverRegistryContract!,
     methodName: 'get_worker',
     args: {
-      account_id: account.accountId,
+      account_id: workerId,
     },
   });
 }
 
-export async function getPool(account: Account, poolId: number): Promise<Pool | null> {
-  return account.viewFunction({
+export async function getPool(nearService: NearService, poolId: number): Promise<Pool | null> {
+  return nearService.secureViewFunction({
     contractId: solverRegistryContract!,
     methodName: 'get_pool',
     args: {

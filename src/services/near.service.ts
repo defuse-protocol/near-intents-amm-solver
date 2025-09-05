@@ -1,6 +1,6 @@
 import { Account, connect, KeyPair, Near } from 'near-api-js';
 import { KeyStore } from 'near-api-js/lib/key_stores';
-import { nearAccountConfig, nearConnectionConfig, nearNetworkId } from '../configs/near.config';
+import { nearAccountConfig, nearConnectionConfigs, nearNetworkId, nodeUrls } from '../configs/near.config';
 import { LoggerService } from './logger.service';
 import { deriveWorkerAccount } from '../utils/agent';
 import { liquidityPoolContract, solverPoolId, solverRegistryContract } from 'src/configs/intents.config';
@@ -12,11 +12,13 @@ export class NearService {
   private account!: Account;
   private publicKey: string | undefined;
 
+  private viewers!: Account[];
+
   private logger = new LoggerService('near');
 
   public async init(): Promise<void> {
-    this.logger.info(`Using Near RPC node: ${nearConnectionConfig.nodeUrl}`);
-    this.near = await connect(nearConnectionConfig);
+    this.logger.info(`Using Near RPC nodes: ${nodeUrls.join(', ')}`);
+    this.near = await connect(nearConnectionConfigs[0]);
     this.keyStore = this.near.config.keyStore;
 
     if (teeEnabled) {
@@ -32,6 +34,15 @@ export class NearService {
       const keyPair = KeyPair.fromString(privateKey);
       await this.keyStore.setKey(nearNetworkId, accountId, keyPair);
       this.account = await this.near.account(accountId);
+
+      // Configure viewers for cross-checking view function results from multiple NEAR RPC nodes
+      this.viewers = await Promise.all(nearConnectionConfigs.map(async (config) => {
+        const near = await connect(config);
+        return near.account(accountId);
+      }));
+      if (this.viewers.length < 2) {
+        throw new Error('Not enough NEAR RPC nodes to cross-check view function results');
+      }
     } else {
       if (!nearAccountConfig.accountId) {
         throw new Error('NEAR_ACCOUNT_ID is not defined');
@@ -74,7 +85,7 @@ export class NearService {
   }
 
   /**
-   * Gets the balance of the NEAR account
+   * Gets the NEAR balance of the account
    * @returns {Promise<string>} Account balance
    */
   public async getBalance() {
@@ -90,5 +101,27 @@ export class NearService {
       }
     }
     return balance;
+  }
+
+  /**
+   * Secure view function by cross-checking results from multiple NEAR RPC nodes
+   * @param { contractId: string, methodName: string, args: object | undefined }
+   * @returns validated view function result
+   */
+  public async secureViewFunction(
+    { contractId, methodName, args }: { contractId: string, methodName: string, args?: object },
+  ) {
+    const results = await Promise.all(this.viewers.map(async (viewer) => {
+      return viewer.viewFunction({
+        contractId,
+        methodName,
+        args,
+      });
+    }));
+    // deep compare the results
+    if (results.every((result) => JSON.stringify(result) === JSON.stringify(results[0]))) {
+      return results[0];
+    }
+    throw new Error('View function results mismatch');
   }
 }

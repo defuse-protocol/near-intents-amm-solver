@@ -23,7 +23,7 @@ export class WorkerService {
   }
 
   private async verifyPoolInfo() {
-    const pool = await getPool(this.nearService.getAccount(), Number(solverPoolId!));
+    const pool = await getPool(this.nearService, Number(solverPoolId!));
     if (!pool) {
       throw new Error('Pool not found');
     }
@@ -57,7 +57,7 @@ export class WorkerService {
 
   private async registerSolverInRegistry() {
     const signer = this.nearService.getAccount();
-    let worker = await getWorker(signer);
+    let worker = await getWorker(this.nearService, signer.accountId);
     if (!worker) {
       let balance = '0';
       while (balance === '0') {
@@ -74,16 +74,15 @@ export class WorkerService {
       const publicKey = this.nearService.getAccountPublicKey();
       await registerWorker(signer, publicKey);
       this.logger.info(`Worker registered`);
-      worker = await getWorker(signer);
+      worker = await getWorker(this.nearService, signer.accountId);
     }
 
     this.logger.info(`Worker: ${JSON.stringify(worker)}`);
   }
 
   private async queryPingTimeoutMs() {
-    const signer = this.nearService.getAccount();
     if (!this.pingTimeoutMs) {
-      this.pingTimeoutMs = await getWorkerPingTimeoutMs(signer);
+      this.pingTimeoutMs = await getWorkerPingTimeoutMs(this.nearService);
     }
     return this.pingTimeoutMs;
   }

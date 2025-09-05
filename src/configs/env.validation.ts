@@ -36,6 +36,7 @@ export const envVariablesValidationSchema = Joi.object({
 
   NEAR_NETWORK_ID: Joi.string().valid('mainnet', 'testnet').allow('', null),
   NEAR_NODE_URL: Joi.string().allow('', null),
+  NEAR_NODE_URLS: Joi.string().allow('', null),
 
   AMM_TOKEN1_ID: Joi.string().required(),
   AMM_TOKEN2_ID: Joi.string().required(),
