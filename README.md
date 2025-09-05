@@ -39,6 +39,7 @@ In TEE Mode, the solver pool contract own the token reserves on the NEAR Intents
 * `TEE_ENABLED` - set to `true` if the solver needs to be run inside TEE
 * `SOLVER_REGISTRY_CONTRACT` - the solver registry contract on NEAR for the solvers to register themselves, e.g. `solver-registry.near`
 * `SOLVER_POOL_ID` - the pool ID that the solver pool contract, e.g. `0`, `1`, ...
+* `NEAR_NODE_URLS` - configure multiple node URLs for cross-checking results, separated by comma, e.g. `https://free.rpc.fastnear.com,https://near.lava.build`
 
 #### (2) Non-TEE Mode
 
