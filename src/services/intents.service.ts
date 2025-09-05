@@ -17,17 +17,13 @@ export class IntentsService {
     return hash.digest('base64');
   }
 
-  public getIntentsAccountId(): string {
-    return teeEnabled ? this.nearService.getIntentsAccountId() : this.nearService.getAccountId();
-  }
-
   public async getBalancesOnContract(tokenIds: string[]) {
     const account = this.nearService.getAccount();
     const result = await account.viewFunction({
       contractId: intentsContract,
       methodName: 'mt_batch_balance_of',
       args: {
-        account_id: this.getIntentsAccountId(),
+        account_id: this.nearService.getIntentsAccountId(),
         token_ids: tokenIds,
       },
     });
@@ -44,7 +40,7 @@ export class IntentsService {
       contractId: intentsContract,
       methodName: 'is_nonce_used',
       args: {
-        account_id: this.getIntentsAccountId(),
+        account_id: this.nearService.getIntentsAccountId(),
         nonce,
       },
     });
