@@ -89,10 +89,9 @@ export class QuoterService {
 
     const quoteDeadlineMs = params.min_deadline_ms + quoteDeadlineExtraMs;
     const standard = SignStandardEnum.nep413;
-    const liquidityPoolVault = this.nearService.getLiquidityPoolVaultId();
     const message: IMessage = {
-      // use liquidity pool vault contract as signer_id
-      signer_id: liquidityPoolVault,
+      // use liquidity pool contract as signer_id
+      signer_id: this.nearService.getLiquidityPoolContractId(),
       deadline: new Date(Date.now() + quoteDeadlineMs).toISOString(),
       intents: [
         {

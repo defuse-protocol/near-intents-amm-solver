@@ -3,7 +3,7 @@ import { KeyStore } from 'near-api-js/lib/key_stores';
 import { nearConnectionConfig, nearNetworkId } from '../configs/near.config';
 import { LoggerService } from './logger.service';
 import { deriveWorkerAccount } from '../utils/agent';
-import { liquidityPoolVaultContract } from 'src/configs/intents.config';
+import { liquidityPoolContract } from 'src/configs/intents.config';
 
 export class NearService {
   private near!: Near;
@@ -38,8 +38,8 @@ export class NearService {
     return this.publicKey;
   }
 
-  public getLiquidityPoolVaultId(): string {
-    return liquidityPoolVaultContract;
+  public getLiquidityPoolContractId(): string {
+    return liquidityPoolContract;
   }
 
   public async signMessage(message: Uint8Array) {

@@ -17,7 +17,7 @@ export class IntentsService {
   }
 
   public getIntentsAccountId(): string {
-    return this.nearService.getLiquidityPoolVaultId();
+    return this.nearService.getLiquidityPoolContractId();
   }
 
   public async getBalancesOnContract(tokenIds: string[]) {
