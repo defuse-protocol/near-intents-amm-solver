@@ -1,7 +1,7 @@
 import { NearService } from './near.service';
 import { getPool, getWorkerPingTimeoutMs, pingRegistry, registerWorker, reportWorkerId } from 'src/utils/agent';
 import { getWorker } from 'src/utils/agent';
-import { sleep } from 'src/utils/sleep';
+import { sleep } from 'src/utils/time';
 import { LoggerService } from './logger.service';
 import { NEAR } from 'near-units';
 import { solverPoolId } from 'src/configs/intents.config';
