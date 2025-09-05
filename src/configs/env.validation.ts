@@ -39,5 +39,9 @@ export const envVariablesValidationSchema = Joi.object({
 
   AMM_TOKEN1_ID: Joi.string().required(),
   AMM_TOKEN2_ID: Joi.string().required(),
-  MARGIN_PERCENT: Joi.number().positive().default(0.3),
+  MARGIN_PERCENT: Joi.alternatives().conditional('TEE_ENABLED', {
+    is: true,
+    then: Joi.number().positive().required(),
+    otherwise: Joi.number().positive().default(0.3),
+  }),
 }).unknown();
