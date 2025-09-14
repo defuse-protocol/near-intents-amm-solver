@@ -172,7 +172,7 @@ export async function registerWorker(account: Account, publicKey: string): Promi
       tcb_info,
     },
     attachedDeposit: BigInt(1),   // 1 yocto NEAR
-    gas: BigInt(200000000000000), // 200 Tgas
+    gas: BigInt(300000000000000), // 300 Tgas
   });
 }
 
