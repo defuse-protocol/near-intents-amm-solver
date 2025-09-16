@@ -5,7 +5,7 @@ import { IQuoteRequestData, IQuoteResponseData } from '../interfaces/websocket.i
 import { CacheService } from './cache.service';
 import { intentsContract } from '../configs/intents.config';
 import { marginPercent, quoteDeadlineExtraMs, quoteDeadlineMaxMs } from '../configs/quoter.config';
-import { tokens } from '../configs/tokens';
+import { tokens } from '../configs/tokens.config';
 import { NearService } from './near.service';
 import { IntentsService } from './intents.service';
 import { LoggerService } from './logger.service';
@@ -90,7 +90,7 @@ export class QuoterService {
     const quoteDeadlineMs = params.min_deadline_ms + quoteDeadlineExtraMs;
     const standard = SignStandardEnum.nep413;
     const message: IMessage = {
-      signer_id: this.nearService.getAccountId(),
+      signer_id: this.nearService.getIntentsAccountId(),
       deadline: new Date(Date.now() + quoteDeadlineMs).toISOString(),
       intents: [
         {

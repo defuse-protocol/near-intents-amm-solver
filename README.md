@@ -31,6 +31,18 @@ set NODE_ENV=local && npm start
 ### Required parameters
 
 * `AMM_TOKEN1_ID` and `AMM_TOKEN2_ID` — a pair of NEP-141 token IDs for the AMM, e.g., `usdt.tether-token.near` and `wrap.near`.
+
+#### (1) TEE Mode
+
+In TEE Mode, the solver pool contract owns the token reserves on the NEAR Intents contract. A key pair is generated inside the TEE (no one has access to it), and its public key is added to the solver pool contract on NEAR Intents. You only need to provide the solver registry contract and the pool ID; the solver running in the TEE will automatically register and start serving.
+
+* `TEE_ENABLED` - set to `true` if the solver needs to be run inside TEE
+* `SOLVER_REGISTRY_CONTRACT` - the solver registry contract on NEAR for the solvers to register themselves, e.g. `solver-registry.near`
+* `SOLVER_POOL_ID` - the pool ID that the solver pool contract, e.g. `0`, `1`, ...
+* `NEAR_NODE_URLS` - configure multiple node URLs for cross-checking results, separated by comma, e.g. `https://free.rpc.fastnear.com,https://near.lava.build`
+
+#### (2) Non-TEE Mode
+
 * `NEAR_ACCOUNT_ID` — the solver's account ID on Near, e.g., `solver1.near`. This account should be the owner of token reserves on the Near Intents contract (see the "Preparation" section below for details).
 * `NEAR_PRIVATE_KEY` — the solver's account private key in a prefixed base-58 form, e.g. `ed25519:pR1vat3K37...`. The corresponding public key should be added to the Near Intents contract (see the "Preparation" section below for details).
 
@@ -81,3 +93,9 @@ Development mode (with automatic reload):
 npm run dev
 ```
 
+TEE mode:
+
+You have multiple ways to run the solver inside TEE:
+
+1. use the [TEE solver server](https://github.com/Near-One/tee-solver/tree/main/server)
+2. follow the [Phala Cloud](https://docs.phala.com/phala-cloud/cvm/overview) docs

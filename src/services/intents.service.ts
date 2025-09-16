@@ -22,7 +22,7 @@ export class IntentsService {
       contractId: intentsContract,
       methodName: 'mt_batch_balance_of',
       args: {
-        account_id: account.accountId,
+        account_id: this.nearService.getIntentsAccountId(),
         token_ids: tokenIds,
       },
     });
@@ -39,7 +39,7 @@ export class IntentsService {
       contractId: intentsContract,
       methodName: 'is_nonce_used',
       args: {
-        account_id: account.accountId,
+        account_id: this.nearService.getIntentsAccountId(),
         nonce,
       },
     });
