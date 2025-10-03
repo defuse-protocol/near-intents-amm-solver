@@ -30,6 +30,11 @@ export interface IJsonrpcResponse {
   error?: unknown;
 }
 
+export interface IMetadata {
+  traceparent?: string;
+  partner_id?: string;
+}
+
 export interface IQuoteRequestData {
   quote_id: string;
   defuse_asset_identifier_in: string;

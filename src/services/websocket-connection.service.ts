@@ -10,6 +10,7 @@ import {
   ISubscription,
   RelayMethod,
   RelayEventKind,
+  IMetadata,
 } from '../interfaces/websocket.interface';
 import { tokens } from '../configs/tokens.config';
 import { wsRelayUrl } from '../configs/websocket.config';
@@ -154,7 +155,7 @@ export class WebsocketConnectionService {
 
       switch (subscription.eventKind) {
         case RelayEventKind.QUOTE:
-          this.processQuote(req.params.data as IQuoteRequestData);
+          this.processQuote(req.params.data as IQuoteRequestData, req.params.metadata as IMetadata);
           break;
         case RelayEventKind.QUOTE_STATUS:
           this.processQuoteStatus(req.params.data as IPublishedQuoteData);
@@ -169,7 +170,7 @@ export class WebsocketConnectionService {
     }
   }
 
-  private async processQuote(quoteReq: IQuoteRequestData) {
+  private async processQuote(quoteReq: IQuoteRequestData, metadata: IMetadata) {
     const { quote_id, defuse_asset_identifier_in, defuse_asset_identifier_out } = quoteReq;
     const logger = this.logger.toScopeLogger(quote_id);
 
@@ -181,7 +182,7 @@ export class WebsocketConnectionService {
 
       logger.info(`Received supported quote request: ${JSON.stringify(quoteReq)}`);
 
-      const quoteResp = await this.quoterService.getQuoteResponse(quoteReq);
+      const quoteResp = await this.quoterService.getQuoteResponse(quoteReq, metadata);
       if (!quoteResp) {
         return;
       }

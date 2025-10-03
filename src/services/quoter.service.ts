@@ -1,7 +1,7 @@
 import Big from 'big.js';
 import bs58 from 'bs58';
 import { IMessage, SignStandardEnum } from '../interfaces/intents.interface';
-import { IQuoteRequestData, IQuoteResponseData } from '../interfaces/websocket.interface';
+import { IMetadata, IQuoteRequestData, IQuoteResponseData } from '../interfaces/websocket.interface';
 import { CacheService } from './cache.service';
 import { intentsContract } from '../configs/intents.config';
 import { marginPercent, quoteDeadlineExtraMs, quoteDeadlineMaxMs } from '../configs/quoter.config';
@@ -17,6 +17,9 @@ type State = {
   nonce: string;
 };
 
+const OneClickPartnerId = '1click';
+const RouterPartnerId = 'router-solver';
+
 export class QuoterService {
   private currentState?: State;
 
@@ -27,6 +30,20 @@ export class QuoterService {
     private readonly nearService: NearService,
     private readonly intentsService: IntentsService,
   ) {}
+
+  private isFrom1Click(logger: LoggerService, metadata?: IMetadata): boolean {
+    const partnerId = metadata?.partner_id;
+    const isTrustedPartner = partnerId !== undefined && [OneClickPartnerId, RouterPartnerId].includes(partnerId);
+
+    if (isTrustedPartner) {
+      logger.info('Request from 1click or router solver');
+
+      return true;
+    }
+
+    logger.info('Request is not from 1click or router solver');
+    return false;
+  }
 
   public updateCurrentState = makeNonReentrant(async () => {
     const reserves = await this.intentsService.getBalancesOnContract(tokens);
@@ -39,16 +56,24 @@ export class QuoterService {
     this.logger.debug(`Current state: ${JSON.stringify(this.currentState)}`);
   });
 
-  public async getQuoteResponse(params: IQuoteRequestData): Promise<IQuoteResponseData | undefined> {
+  public async getQuoteResponse(
+    params: IQuoteRequestData,
+    metadata: IMetadata,
+  ): Promise<IQuoteResponseData | undefined> {
     const logger = this.logger.toScopeLogger(params.quote_id);
     if (params.min_deadline_ms > quoteDeadlineMaxMs) {
       logger.info(`min_deadline_ms exceeds maximum allowed value: ${params.min_deadline_ms} > ${quoteDeadlineMaxMs}`);
       return;
     }
 
-    const { currentState } = this;
+    const { currentState, isFrom1Click } = this;
     if (!currentState) {
       logger.error(`Quoter state is not yet initialized`);
+      return;
+    }
+
+    const oneClickOnly = process.env.ONE_CLICK_API_ONLY?.toLowerCase() === 'true';
+    if (oneClickOnly && !isFrom1Click(logger, metadata)) {
       return;
     }
 
