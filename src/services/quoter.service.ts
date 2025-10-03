@@ -31,8 +31,11 @@ export class QuoterService {
     private readonly intentsService: IntentsService,
   ) {}
 
-  private isFrom1Click(metadata: IMetadata, logger: LoggerService): boolean {
-    if (metadata.partner_id && [OneClickPartnerId, RouterPartnerId].includes(metadata.partner_id)) {
+  private isFrom1Click(logger: LoggerService, metadata?: IMetadata): boolean {
+    const partnerId = metadata?.partner_id;
+    const isTrustedPartner = partnerId !== undefined && [OneClickPartnerId, RouterPartnerId].includes(partnerId);
+
+    if (isTrustedPartner) {
       logger.info('Request from 1click or router solver');
 
       return true;
@@ -69,7 +72,8 @@ export class QuoterService {
       return;
     }
 
-    if (process.env.ONE_CLICK_API_ONLY && !isFrom1Click(metadata, logger)) {
+    const oneClickOnly = process.env.ONE_CLICK_API_ONLY?.toLowerCase() === 'true';
+    if (oneClickOnly && !isFrom1Click(logger, metadata)) {
       return;
     }
 
