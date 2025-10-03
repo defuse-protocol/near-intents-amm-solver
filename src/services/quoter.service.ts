@@ -31,24 +31,14 @@ export class QuoterService {
     private readonly intentsService: IntentsService,
   ) {}
 
-  private isFrom1Click(params: IQuoteRequestData, metadata: IMetadata, logger: LoggerService): boolean {
-    logger.info(`Trusted metadata: ${JSON.stringify(params.trusted_metadata)}`);
-    logger.info(`Metadata: ${JSON.stringify(metadata)}`);
-    if (metadata.partner_id === OneClickPartnerId) {
-      logger.info('Request from 1click directly');
-
-      return true;
-    }
-    if (
-      metadata.partner_id === RouterPartnerId &&
-      params.trusted_metadata?.source === 'router' &&
-      params.trusted_metadata?.upstream_metadata?.partner_id === OneClickPartnerId
-    ) {
-      logger.info('Request from router which originated in 1click');
+  private isFrom1Click(metadata: IMetadata, logger: LoggerService): boolean {
+    if (metadata.partner_id && [OneClickPartnerId, RouterPartnerId].includes(metadata.partner_id)) {
+      logger.info('Request from 1click or router solver');
 
       return true;
     }
 
+    logger.info('Request is not from 1click or router solver');
     return false;
   }
 
@@ -80,8 +70,7 @@ export class QuoterService {
       return;
     }
 
-    if (process.env.ONE_CLICK_API_ONLY && !isFrom1Click(params, metadata, logger)) {
-      logger.info('1click API Only mode is ON. This request is not from 1click');
+    if (process.env.ONE_CLICK_API_ONLY && !isFrom1Click(metadata, logger)) {
       return;
     }
 
