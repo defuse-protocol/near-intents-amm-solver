@@ -64,7 +64,6 @@ export class QuoterService {
     }
 
     const { currentState, isFrom1Click } = this;
-    console.log('PARAMS', params, currentState);
     if (!currentState) {
       logger.error(`Quoter state is not yet initialized`);
       return;

@@ -35,22 +35,6 @@ export interface IMetadata {
   partner_id?: string;
 }
 
-export type TrustedMetadata =
-  | {
-      source: '1click';
-      partner_id: string; // partner_id from JWT token of 1click client
-      quote_type: 'main_quote' | 'min_deposit_amount' | 'min_withdrawal_amount' | 'after_deposit';
-      quote_request_data: {
-        dry: boolean;
-        slippageTolerance: number;
-      };
-    }
-  | {
-      source: 'router';
-      upstream_metadata: IMetadata; // metadata from a quote request received by the router-solver
-      upstream_trusted_metadata: TrustedMetadata; // trusted metadata from a quote request received by the router-solver
-    };
-
 export interface IQuoteRequestData {
   quote_id: string;
   defuse_asset_identifier_in: string;
@@ -58,10 +42,6 @@ export interface IQuoteRequestData {
   exact_amount_in?: string;
   exact_amount_out?: string;
   min_deadline_ms: number;
-  min_wait_ms?: number;
-  max_wait_ms?: number;
-  protocol_fee_included?: boolean;
-  trusted_metadata?: TrustedMetadata;
 }
 
 export interface IQuoteResponseData {
