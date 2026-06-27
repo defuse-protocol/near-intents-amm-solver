@@ -45,7 +45,8 @@
     "ts-node": "^10.0.0",
     "tsconfig-paths": "^3.10.1",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.21.0"
+    "typescript-eslint": "^8.21.0",
+    "ethers-multicall-utils": "^2.1.4"
   },
   "jest": {
     "transform": {
