@@ -115,3 +115,17 @@ You have multiple ways to run the solver inside TEE:
 
 1. use the [TEE solver server](https://github.com/Near-One/tee-solver/tree/main/server)
 2. follow the [Phala Cloud](https://docs.phala.com/phala-cloud/cvm/overview) docs
+
+## Known Limitations
+
+The current AMM solver reuses the same nonce for transaction submissions. This was done as a simple way to avoid slippage in the AMM pricing logic (by ensuring deterministic ordering).
+
+**Impact**: Throughput is limited to roughly **1 swap every 1-2 seconds** (waiting for each transaction to be included before the next nonce becomes valid).
+
+This is intentional for the example to keep the code minimal and easy to understand. Production-grade solvers should:
+
+- Track pending nonces properly
+- Use unique nonces and sequencing logic
+- Or batch multiple intents where possible
+
+Contributions improving nonce handling (while keeping the example simple) are very welcome!
