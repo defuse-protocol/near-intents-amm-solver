@@ -54,14 +54,13 @@ In TEE Mode, the solver pool contract owns the token reserves on the NEAR Intent
 - `LOG_LEVEL` — logging level: `error`, `warn`, `info`, or `debug` (default: `info`)
 - `NEAR_NODE_URL` — the Near RPC node URL to use (default: `https://rpc.mainnet.near.org`)
 - `RELAY_WS_URL` — solver relay URL (default: `wss://solver-relay-v2.chaindefuser.com/ws`)
-- `RELAY_AUTH_KEY` — solver's authentication key for accessing the relay (currently unused)
 - `INTENTS_CONTRACT` — ID of the Near Intents contract (default: `intents.near`)
 - `MARGIN_PERCENT` — AMM margin percent, must be positive (default: `0.3`)
 - `ONE_CLICK_API_ONLY` - Set to true to only allow the solver to parse requests coming from the 1Click API
 
 ## Preparation before the first run
 
-For the AMM solver to function properly, reserves of the tokens specified in `AMM_TOKEN1_ID` and `AMM_TOKEN2_ID` must be deposited to the Near Intents contract. Additionally, the solver's public key must be registered with the contract.
+For the AMM solver to function properly in public mode, reserves of the tokens specified in `AMM_TOKEN1_ID` and `AMM_TOKEN2_ID` must be deposited to the Near Intents contract. Additionally, the solver's public key must be registered with the contract.
 
 Follow these steps using the Near CLI RS tool.
 
@@ -115,3 +114,87 @@ You have multiple ways to run the solver inside TEE:
 
 1. use the [TEE solver server](https://github.com/Near-One/tee-solver/tree/main/server)
 2. follow the [Phala Cloud](https://docs.phala.com/phala-cloud/cvm/overview) docs
+
+## Confidential Mode
+
+Set `SOLVER_MODE=confidential` to run the same AMM sample against private liquidity in confidential Intents.
+
+In confidential mode:
+
+- `AMM_TOKEN1_ID` and `AMM_TOKEN2_ID` are still configured as public token IDs;
+- the solver quotes their confidential asset identifiers: `imt:<PRIVATE_TREASURY_ACCOUNT_ID>:nep141:<token>`;
+- the solver connects to `PRIVATE_RELAY_WS_URL`;
+- the solver signs `token_diff` intents for `PRIVATE_INTENTS_CONTRACT`;
+- the solver signs private quote responses with versioned nonces;
+- the solver sends quote responses the same way it does in public mode and confirms received quote status updates.
+
+Required confidential env vars:
+
+```env
+SOLVER_MODE=confidential
+PRIVATE_RELAY_WS_URL=wss://f3x8k2m9a7.chaindefuser.com/ws
+PRIVATE_INTENTS_CONTRACT=intents.far
+PRIVATE_INTENTS_CONTRACT_SALT=e110f317
+PRIVATE_TREASURY_ACCOUNT_ID=51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe
+ONE_CLICK_BASE_URL=https://1click.chaindefuser.com
+SOLVER_INSTANCE_ID=amm-solver-1
+PARTNER_JWT=...
+```
+
+`PRIVATE_RELAY_WS_URL`, `PRIVATE_INTENTS_CONTRACT`, `PRIVATE_INTENTS_CONTRACT_SALT`, `PRIVATE_TREASURY_ACCOUNT_ID`, and `ONE_CLICK_BASE_URL` are production constants shared by solver operators. `SOLVER_INSTANCE_ID` is a stable identifier for the running solver instance. `PARTNER_JWT` is the solver-specific credential from the Partners dashboard at `https://partners.near-intents.org` and is used for both 1Click API requests and private relay authentication.
+
+`PRIVATE_INTENTS_CONTRACT` identifies the confidential Intents contract used in signed quote payloads.
+
+`ONE_CLICK_BASE_URL` also selects the public Intents environment used for 1Click authentication: the `1click.chaindefuser.com` host uses production, and other hosts use stage. Public quote signing does not require `PARTNER_JWT`.
+
+### Quote status acknowledgements
+
+The relay supports an acknowledgement mechanism for guaranteed delivery of quote status updates. It is enabled by providing an `instance_id` in the websocket URL, which the solver takes from `SOLVER_INSTANCE_ID`. Every running solver instance needs its own value.
+
+The solver acknowledges an event only after processing it, so an event is redelivered instead of being lost if the solver stops while handling it. Redelivery also means the same event can arrive more than once; here that is harmless, because processing it only refreshes the quoter state.
+
+This sample keeps signed quotes in memory, so after a restart it can no longer match a redelivered status update with the quote that produced it. A solver that acts on settlements should persist the quote context before sending the quote response.
+
+### Depositing and withdrawing private liquidity with 1Click
+
+Solver operators can use the 1Click API to deposit liquidity into confidential Intents and withdraw it back to public Intents.
+
+For the AMM solver to function properly in confidential mode, private reserves of both tokens specified in `AMM_TOKEN1_ID` and `AMM_TOKEN2_ID` must be deposited for the solver account. Ensure the solver account has sufficient funds on public Intents for both AMM tokens, then use the deposit example once for each token.
+
+Use 1Click asset IDs in `originAsset` and `destinationAsset`, such as `nep141:wrap.near`. `NEAR_ACCOUNT_ID` is used as the Intents account for `refundTo` and `recipient`.
+
+- deposit/shield into confidential Intents: `depositType=INTENTS`, `recipientType=CONFIDENTIAL_INTENTS`, `refundType=INTENTS`;
+- withdraw/unshield back to public Intents: `depositType=CONFIDENTIAL_INTENTS`, `recipientType=INTENTS`, `refundType=CONFIDENTIAL_INTENTS`.
+
+These requests intentionally use the same asset as both `originAsset` and `destinationAsset`. They deposit or withdraw liquidity; they are not AMM price swaps.
+
+The runnable example is in `src/examples/one-click-confidential-liquidity.ts`. It performs the regular 1Click flow: quote, generate intent, sign, submit intent, and poll execution status. Its config lives in `src/configs/one-click-confidential-liquidity.config.ts`.
+
+Configure `NEAR_ACCOUNT_ID`, `NEAR_PRIVATE_KEY`, `ONE_CLICK_BASE_URL`, and `PARTNER_JWT`, then deposit each AMM reserve:
+
+```bash
+NODE_ENV=local \
+ONE_CLICK_ASSET_ID=nep141:wrap.near \
+ONE_CLICK_AMOUNT=100000000000000000000000 \
+npm run one-click:deposit-confidential
+
+NODE_ENV=local \
+ONE_CLICK_ASSET_ID=nep141:usdt.tether-token.near \
+ONE_CLICK_AMOUNT=1000000 \
+npm run one-click:deposit-confidential
+```
+
+Replace the asset IDs and amounts with the pair and reserve sizes you want to run. Amounts are in the token's smallest unit. To withdraw liquidity back to public Intents, run the withdraw example with the asset and amount you want to withdraw:
+
+```bash
+NODE_ENV=local \
+ONE_CLICK_ASSET_ID=nep141:wrap.near \
+ONE_CLICK_AMOUNT=100000000000000000000000 \
+npm run one-click:withdraw-confidential
+```
+
+After both reserves are deposited, start the solver with the same environment file:
+
+```bash
+NODE_ENV=local npm start
+```

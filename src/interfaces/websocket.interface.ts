@@ -1,7 +1,8 @@
-import { SignStandardEnum } from './intents.interface';
+import type { SignedIntent } from '../services/intents.service';
 
 export enum RelayMethod {
   SUBSCRIBE = 'subscribe',
+  ACKNOWLEDGE = 'acknowledge',
   QUOTE_RESPONSE = 'quote_response',
 }
 
@@ -50,16 +51,7 @@ export interface IQuoteResponseData {
     amount_out?: string;
     amount_in?: string;
   };
-  signed_data: {
-    standard: SignStandardEnum;
-    payload: {
-      message: string;
-      nonce: string;
-      recipient: string;
-    };
-    signature: string;
-    public_key: string;
-  };
+  signed_data: SignedIntent;
   other_quote_hashes?: string[];
 }
 

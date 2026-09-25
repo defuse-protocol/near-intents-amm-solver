@@ -6,6 +6,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node -r tsconfig-paths/register -r ts-node/register src/main.ts",
     "dev": "node -r tsconfig-paths/register -r ts-node/register --watch src/main.ts",
+    "one-click:deposit-confidential": "node -r tsconfig-paths/register -r ts-node/register src/examples/one-click-confidential-liquidity.ts deposit",
+    "one-click:withdraw-confidential": "node -r tsconfig-paths/register -r ts-node/register src/examples/one-click-confidential-liquidity.ts withdraw",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -15,11 +17,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@defuse-protocol/intents-sdk": "^0.71.0",
+    "@defuse-protocol/one-click-sdk-typescript": "^0.1.25",
     "@phala/dstack-sdk": "^0.5.5",
     "big.js": "^6.2.2",
-    "borsh": "^2.0.0",
-    "borsher": "^3.5.0",
-    "bs58": "^6.0.0",
     "dotenv": "^16.4.7",
     "joi": "^17.13.3",
     "near-api-js": "^4.0.3",
@@ -28,7 +29,7 @@
     "node-cache": "^5.1.2",
     "p-retry": "^7.0.0",
     "winston": "^3.3.3",
-    "ws": "^8.14.2"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

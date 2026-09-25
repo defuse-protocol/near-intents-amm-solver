@@ -22,7 +22,7 @@ export async function app() {
     await workerService.init();
   }
 
-  const quoterService = new QuoterService(cacheService, nearService, intentsService);
+  const quoterService = new QuoterService(cacheService, intentsService);
   await quoterService.updateCurrentState();
 
   const cronService = new CronService(quoterService);
